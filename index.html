@@ -2,10 +2,12 @@
 <html lang="ko">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#FAF9F7">
 <title>AFTER WINE — 와인 인텔리전스</title>
 <style>
 /* ═══════ tokens ═══════ */
 :root{
+  color-scheme:light;
   --bg:#FAF9F7; --surface:#FFFFFF; --sunken:#F2EFEB; --hover:#F6F3EF;
   --ink:#191416; --ink2:#645A5E; --ink3:#9C9195; --line:#E7E2DD; --hair:#EFEBE6;
   --accent:#8E2A3E; --accent-ink:#FBF7F4; --accent-soft:#F6E9EC;
@@ -16,18 +18,8 @@
   --glass-swt1:#C89A3F; --glass-swt2:#6E4F17;
   --r:18px; --rs:12px;
 }
-@media (prefers-color-scheme: dark){:root{
-  --bg:#131013; --surface:#1B171A; --sunken:#221D21; --hover:#241F23;
-  --ink:#F1EBE8; --ink2:#B4A8AC; --ink3:#7D7276; --line:#332C30; --hair:#282226;
-  --accent:#D67C8C; --accent-ink:#1A0D11; --accent-soft:#3A2229;
-  --gold:#CFAC64; --ok:#8FBF9F; --warn:#D6B455;
-}}
-:root[data-theme="dark"]{
-  --bg:#131013; --surface:#1B171A; --sunken:#221D21; --hover:#241F23;
-  --ink:#F1EBE8; --ink2:#B4A8AC; --ink3:#7D7276; --line:#332C30; --hair:#282226;
-  --accent:#D67C8C; --accent-ink:#1A0D11; --accent-soft:#3A2229;
-  --gold:#CFAC64; --ok:#8FBF9F; --warn:#D6B455;
-}
+/* 라이트 테마 고정 — 기기 다크 모드와 무관하게 PC·모바일 동일한 화면 */
+:root[data-theme="dark"],
 :root[data-theme="light"]{
   --bg:#FAF9F7; --surface:#FFFFFF; --sunken:#F2EFEB; --hover:#F6F3EF;
   --ink:#191416; --ink2:#645A5E; --ink3:#9C9195; --line:#E7E2DD; --hair:#EFEBE6;
