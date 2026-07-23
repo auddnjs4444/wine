@@ -1035,6 +1035,89 @@ function localWine(p){
     return (en&&we&&(we.includes(en.slice(0,12))||en.includes(we)))||(ko&&wk&&(ko.includes(wk.slice(0,8))||wk.includes(ko)));
   });
 }
+/* ── 외부(전 세계) 와인의 앱 내 상세 페이지 — Gemini 실시간 생성 ── */
+let lastPicks=[];const EXT_CACHE={};
+const EXT_CLS={"레드":"g-red","화이트":"g-white","스파클링":"g-spark","스위트":"g-sweet","로제":"g-spark"};
+async function geminiDetail(p){
+  const id=(p.en||p.ko||"").toLowerCase();
+  if(EXT_CACHE[id])return EXT_CACHE[id];
+  const prompt=`너는 와인 전문 소믈리에다. 아래 와인의 상세 정보를 반드시 JSON으로만 출력하라(다른 텍스트 금지):
+{"desc":"두 문장 소개","grape":"품종","abv":"도수(예: 13.5%)","serve":"서빙 온도(예: 16–18℃)","decant":"디캔팅(예: 1시간 또는 불필요)","aromas":["대표 아로마 4개"],"pairing":["추천 페어링 3개"],"profile":{"body":1,"tannin":1,"acid":1,"sweet":1},"drink":"음용 적기 한 문장","priceKrw":"한국 예상 평균가(예: ₩120,000)"}
+profile 값은 각각 1~5의 정수. 와인: ${p.ko||""} (${p.en||""}, ${p.country||""} ${p.region||""})`;
+  const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key="+encodeURIComponent(getGeminiKey()),{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({contents:[{parts:[{text:prompt}]}],
+      generationConfig:{responseMimeType:"application/json",temperature:.4}})});
+  if(!r.ok)throw new Error("Gemini HTTP "+r.status);
+  const j=await r.json();
+  const d=JSON.parse(j.candidates[0].content.parts[0].text);
+  EXT_CACHE[id]=d;return d;
+}
+function showExtDetail(i){
+  const p=lastPicks[i];if(!p)return;
+  const cls=EXT_CLS[p.type]||"g-red";
+  const yr=(String((p.en||"")+" "+(p.ko||"")).match(/(19|20)\d{2}/)||["NV"])[0];
+  VIEWS.forEach(x=>document.getElementById("view-"+x).classList.toggle("hidden",x!=="detail"));
+  document.getElementById("tab-explore").setAttribute("aria-current","false");
+  document.getElementById("tab-cellar").setAttribute("aria-current","false");
+  document.getElementById("view-detail").innerHTML=`
+    <button class="backbar" onclick="go('explore')">← 탐색으로</button>
+    <div class="d-head">
+      <div class="d-bottle bw-${cls.slice(2)}">${bottle(cls,yr)}</div>
+      <div class="d-title">
+        <div class="region">${esc(p.country||"")}${p.region?" · "+esc(p.region):""}</div>
+        <h2>${esc(p.ko||p.en)}</h2>
+        <div class="en serif">${esc(p.en||"")}</div>
+        <div class="d-stats">
+          ${p.score?`<div class="d-stat"><div class="n serif">${esc(p.score)}<em>PT</em></div><div class="k">평론가 점수</div></div>`:""}
+          ${p.price?`<div class="d-stat d-price"><div class="n serif">${esc(p.price)}</div><div class="k">예상 평균가</div></div>`:""}
+        </div>
+      </div>
+    </div>
+    <p class="d-desc" id="ext-desc">${esc(p.why||"")}</p>
+    <div class="sect" id="ext-more">
+      <div class="thinking" role="status" aria-label="불러오는 중"><i></i><i></i><i></i></div>
+      <p class="sub" style="margin-top:8px">AI 소믈리에가 상세 정보를 정리하는 중…</p>
+    </div>
+    <a class="cta-note" style="text-decoration:none" target="_blank" rel="noopener"
+       href="https://www.wine-searcher.com/find/${encodeURIComponent(p.en||p.ko)}">국내외 판매처 검색 (Wine-Searcher) ↗</a>`;
+  window.scrollTo({top:0});
+  fillExtDetail(p);
+}
+async function fillExtDetail(p){
+  try{
+    const d=await geminiDetail(p);
+    const more=document.getElementById("ext-more");if(!more)return;
+    if(d.desc)document.getElementById("ext-desc").textContent=d.desc;
+    const PN={body:"바디",tannin:"탄닌",acid:"산도",sweet:"당도"};
+    const prof=d.profile||{};
+    const pf=Object.keys(PN).map(k=>{
+      const v=Math.min(5,Math.max(1,Math.round(+prof[k]||3)));
+      return `<div class="pf-row"><span class="k">${PN[k]}</span><span class="pf-track"><span class="pf-fill" style="width:${v*20}%"></span></span><span class="vv">${LV[k][v-1]}</span></div>`;
+    }).join("");
+    more.innerHTML=`
+      <div class="facts" style="margin-top:0">
+        <div class="fact"><div class="k">품종</div><div class="v">${esc(d.grape||"—")}</div></div>
+        <div class="fact"><div class="k">도수</div><div class="v">${esc(d.abv||"—")}</div></div>
+        <div class="fact"><div class="k">서빙 온도</div><div class="v">${esc(d.serve||"—")}</div></div>
+        <div class="fact"><div class="k">디캔팅</div><div class="v">${esc(d.decant||"—")}</div></div>
+      </div>
+      <section class="sect"><div class="sh"><h3>TASTING PROFILE</h3><div class="rule"></div></div>
+        <p class="sub">AI 실시간 분석 — 실제와 다를 수 있습니다</p>
+        <div class="panel">
+          <div class="aroma-chips">${(d.aromas||[]).map(a=>`<span>${esc(a)}</span>`).join("")}</div>
+          <div style="margin-top:6px">${pf}</div>
+          ${d.pairing&&d.pairing.length?`<div class="legend" style="margin-top:14px"><span>추천 페어링 — ${d.pairing.map(esc).join(" · ")}</span></div>`:""}
+        </div>
+      </section>
+      ${d.drink?`<section class="sect"><div class="sh"><h3>DRINKING WINDOW</h3><div class="rule"></div></div>
+        <div class="panel"><p style="margin:0;font-size:14px">${esc(d.drink)}</p></div></section>`:""}
+      ${d.priceKrw?`<p class="count-line" style="margin-top:16px">한국 예상 평균가 ${esc(d.priceKrw)} — 실제 판매가는 판매처별로 다를 수 있습니다</p>`:""}`;
+  }catch(e){
+    const more=document.getElementById("ext-more");
+    if(more)more.innerHTML=`<p class="sub">상세 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p>`;
+  }
+}
 function renderAIcard(q,intro,picksHtml,footer){
   document.getElementById("ai-out").innerHTML=`<div class="ai-card">
     <div class="who"><span class="caps">AI SOMMELIER</span><button class="ai-close" onclick="document.getElementById('ai-out').innerHTML=''">닫기 ✕</button></div>
@@ -1051,18 +1134,19 @@ async function runAI(){
   if(getGeminiKey()){
     try{
       const res=await geminiAsk(q);
-      const html=(res.picks||[]).slice(0,3).map(p=>{
+      lastPicks=(res.picks||[]).slice(0,3);
+      const html=lastPicks.map((p,i)=>{
         const w=localWine(p);
         if(w)return `<button class="ai-pick" onclick="go('detail','${w.id}')">
           <div><div class="nm">${w.ko}</div><div class="why">${esc(p.why)}</div></div>
           <div class="pr">₩${FMT(avgPrice(w))}<small>평균가</small></div></button>`;
-        return `<a class="ai-pick" href="https://www.wine-searcher.com/find/${encodeURIComponent(p.en||p.ko)}" target="_blank" rel="noopener">
-          <div><div class="nm">${esc(p.ko||p.en)} <small style="color:var(--ink3)">↗</small></div>
+        return `<button class="ai-pick" onclick="showExtDetail(${i})">
+          <div><div class="nm">${esc(p.ko||p.en)}</div>
           <div class="why">${esc([p.country,p.region].filter(Boolean).join(" · "))}${p.why?" · "+esc(p.why):""}</div></div>
-          <div class="pr">${esc(p.price||"")}<small>${p.score?esc(p.score)+"pt":"예상가"}</small></div></a>`;
+          <div class="pr">${esc(p.price||"")}<small>${p.score?esc(p.score)+"pt":"예상가"}</small></div></button>`;
       }).join("");
       renderAIcard(q,res.intro||"이런 와인을 추천드립니다.",html,
-        `<p class="search-hint" style="margin:12px 0 0">Gemini 실시간 검색 — 목록에 없는 와인은 Wine-Searcher로 연결됩니다</p>`);
+        `<p class="search-hint" style="margin:12px 0 0">Gemini 실시간 검색 — 외부 와인도 앱 안에서 상세 정보를 볼 수 있습니다</p>`);
       return;
     }catch(e){console.warn("Gemini 호출 실패 — 내장 엔진으로 대체합니다",e)}
   }
