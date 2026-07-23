@@ -309,6 +309,42 @@ textarea.note:focus{border-color:var(--accent)}
 .auth-msg.err{color:#C4453A}
 a.ai-pick{text-decoration:none;color:inherit}
 
+/* ═══════ upgrade: motion · feature · auth v2 ═══════ */
+.shell>main{animation:viewIn .42s cubic-bezier(.16,.84,.28,1) both}
+@keyframes viewIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 12px 32px rgba(25,20,22,.09)}
+.cta-note:hover,.btn-primary:hover{opacity:.92;transform:translateY(-1px)}
+.cta-note,.btn-primary{transition:opacity .15s,transform .15s}
+
+.feature{display:flex;gap:24px;align-items:center;width:100%;text-align:left;margin-top:26px;
+  background:linear-gradient(135deg,var(--surface) 30%,var(--sunken));border:1px solid var(--hair);
+  border-radius:24px;padding:26px 30px;transition:border-color .15s,transform .15s,box-shadow .15s}
+.feature:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 14px 36px rgba(25,20,22,.10)}
+.f-name{font-size:clamp(21px,3.4vw,29px);font-style:italic;line-height:1.2;margin-top:6px}
+.f-ko{font-weight:700;font-size:14.5px;margin-top:3px}
+.f-desc{font-size:13.5px;color:var(--ink2);margin:9px 0 0;max-width:54ch;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.f-meta{display:flex;gap:8px;align-items:baseline;margin-top:13px;font-size:13px;color:var(--ink2);flex-wrap:wrap}
+.f-meta .sc{font-size:17px;color:var(--gold)}
+.f-meta .sc small{font-size:10px;color:var(--ink3);margin-left:2px}
+.f-bottle{flex:none;width:112px;display:flex;align-items:flex-end;justify-content:center;
+  background:radial-gradient(circle at 50% 38%,var(--accent-soft),transparent 72%);padding-top:4px}
+.f-bottle svg{width:46px;height:auto;display:block}
+@media(max-width:560px){.feature{padding:20px 22px}.f-bottle{width:74px}.f-bottle svg{width:34px}}
+
+.bw-red{background:linear-gradient(160deg,var(--sunken) 35%,rgba(128,38,57,.16))}
+.bw-white{background:linear-gradient(160deg,var(--sunken) 35%,rgba(197,168,98,.20))}
+.bw-spark{background:linear-gradient(160deg,var(--sunken) 35%,rgba(163,146,95,.20))}
+.bw-sweet{background:linear-gradient(160deg,var(--sunken) 35%,rgba(200,154,63,.20))}
+
+.link-btn{display:block;margin:10px 2px 0;font-size:12.5px;color:var(--accent);font-weight:600}
+.link-btn:hover{text-decoration:underline}
+.pw-row{position:relative}
+.pw-row input{padding-right:56px}
+.pw-toggle{position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:11.5px;color:var(--ink3);padding:6px 9px;font-weight:600}
+.pw-toggle:hover{color:var(--ink)}
+.auth-back{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;color:var(--ink3);margin-top:10px}
+.auth-back:hover{color:var(--ink)}
+
 .toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,90px);background:var(--ink);color:var(--bg);
   padding:12px 24px;border-radius:999px;font-size:14px;font-weight:600;transition:transform .3s cubic-bezier(.2,.8,.2,1);z-index:99;pointer-events:none}
 .toast.on{transform:translate(-50%,0)}
@@ -356,6 +392,7 @@ footer.app{margin-top:64px;padding-top:22px;border-top:1px solid var(--hair);fon
   </p>
 
   <div id="ai-out"></div>
+  <div id="feature"></div>
 
   <div class="toolbar">
     <div class="chips" id="chips" role="group" aria-label="필터"></div>
@@ -586,13 +623,35 @@ const persist=()=>{try{
 
 /* ═══════════ 병 아트 ═══════════ */
 function bottle(cls,label){
-  return `<svg viewBox="0 0 60 152" aria-hidden="true">
-    <rect x="25" y="2" width="10" height="9" rx="2" fill="url(#${cls})" opacity=".85"/>
-    <path d="M25.5 11v11c0 5-1.6 8.2-4.6 12.2-4 5.4-6.4 9.8-6.4 17.8v85a8 8 0 008 8h15a8 8 0 008-8v-85c0-8-2.4-12.4-6.4-17.8-3-4-4.6-7.2-4.6-12.2V11z" fill="url(#${cls})"/>
-    <path d="M27.5 14v8c0 6-2 10-5 14" stroke="rgba(255,255,255,.28)" stroke-width="2" fill="none" stroke-linecap="round"/>
-    <rect x="19" y="80" width="22" height="30" rx="2" fill="rgba(250,247,243,.92)"/>
-    <text x="30" y="99" text-anchor="middle" font-size="9.5" font-weight="700" fill="#3A2A2E" font-family="Georgia,serif">${label}</text>
+  return `<svg viewBox="0 0 60 158" aria-hidden="true">
+    <ellipse cx="30" cy="151" rx="17" ry="4" fill="rgba(20,10,14,.16)"/>
+    <rect x="24.5" y="2" width="11" height="11" rx="2.5" fill="url(#${cls})"/>
+    <rect x="24.5" y="10.5" width="11" height="2.6" fill="rgba(0,0,0,.18)"/>
+    <path d="M25.5 13v10c0 5-1.6 8.2-4.6 12.2-4 5.4-6.4 9.8-6.4 17.8v84a8 8 0 008 8h15a8 8 0 008-8v-84c0-8-2.4-12.4-6.4-17.8-3-4-4.6-7.2-4.6-12.2V13z" fill="url(#${cls})"/>
+    <path d="M27.5 16v7c0 6-2 10-5 14-2.4 3.3-3.9 6.4-4.5 9.8" stroke="rgba(255,255,255,.30)" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    <rect x="18.5" y="82" width="23" height="32" rx="2.5" fill="rgba(250,247,243,.94)"/>
+    <rect x="18.5" y="86.5" width="23" height="1.6" fill="#8E2A3E" opacity=".5"/>
+    <text x="30" y="103" text-anchor="middle" font-size="9.5" font-weight="700" fill="#3A2A2E" font-family="Georgia,serif">${label}</text>
   </svg>`;
+}
+/* ═══════════ 이 주의 와인 ═══════════ */
+function renderFeature(){
+  const pool=WINES.filter(w=>bestScore(w)>=96);
+  const week=Math.floor(Date.now()/6048e5);
+  const w=pool[week%pool.length];
+  document.getElementById("feature").innerHTML=`
+  <button class="feature" onclick="go('detail','${w.id}')">
+    <div>
+      <p class="caps" style="color:var(--gold)">WINE OF THE WEEK</p>
+      <div class="f-name serif">${w.en}</div>
+      <div class="f-ko">${w.ko}</div>
+      <p class="f-desc">${w.desc}</p>
+      <div class="f-meta"><span class="sc serif">${bestScore(w)}<small>PT</small></span>
+        <span class="dot">·</span>${stTxt(w)}<span class="dot">·</span>
+        <span>₩${FMT(avgPrice(w))} 평균가</span></div>
+    </div>
+    <div class="f-bottle">${bottle(w.cls,w.vintage)}</div>
+  </button>`;
 }
 
 /* ═══════════ 내비게이션 ═══════════ */
@@ -623,6 +682,12 @@ const RESERVED=new Set(SEED_RV.map(r=>r.user));
 let accounts=[];try{const a=localStorage.getItem("cave2-accounts");if(a)accounts=JSON.parse(a)}catch(e){}
 const saveAccounts=()=>{try{localStorage.setItem("cave2-accounts",JSON.stringify(accounts))}catch(e){}};
 const EMAIL_RE=/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/;
+/* 게스트 모드 비밀번호는 평문 저장하지 않고 SHA-256 해시로 보관 */
+async function hashPw(pw){
+  try{const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode("cave:"+pw));
+    return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
+  catch(e){return"x:"+pw}
+}
 
 const FB={on:false,auth:null,db:null};
 (async function initFirebase(){
@@ -645,14 +710,25 @@ const FB={on:false,auth:null,db:null};
 
 let afterAuth=null,authMode="login";
 function openAuth(next,mode){afterAuth=next||null;authMode=mode||((accounts.length||FB.on)?"login":"signup");renderAuth()}
+function pwField(id,ph,ac){return `<div class="pw-row"><input id="${id}" type="password" placeholder="${ph}" autocomplete="${ac}"><button type="button" class="pw-toggle" onclick="togglePw('${id}',this)">표시</button></div>`}
+function togglePw(id,btn){const i=document.getElementById(id);const show=i.type==="password";i.type=show?"text":"password";btn.textContent=show?"숨김":"표시"}
 function renderAuth(msg,isErr){
   const note=FB.on
     ?"실계정 모드 — 인증 메일을 확인한 계정만 로그인할 수 있습니다."
-    :"게스트 모드 — 계정은 이 기기에만 저장됩니다. 백엔드(Firebase) 연결 시 실제 이메일 인증이 활성화됩니다.";
-  document.getElementById("auth-root").innerHTML=`
-  <div class="overlay" onclick="if(event.target===this)closeAuth()">
-    <div class="modal" role="dialog" aria-modal="true" aria-label="로그인">
-      <p class="caps">WELCOME TO CAVE</p>
+    :"게스트 모드 — 계정은 이 기기에만 저장됩니다. Firebase 연결 시 실제 인증·재설정 메일이 발송됩니다.";
+  let body="";
+  if(authMode==="reset"){
+    body=`
+      <button class="auth-back" onclick="authMode='login';renderAuth()">← 로그인으로</button>
+      <h2 style="margin:8px 0 0;font-size:20px;font-weight:400">비밀번호 찾기</h2>
+      <p class="auth-msg" style="margin:8px 2px 0">${FB.on
+        ?"가입한 이메일을 입력하면 비밀번호 재설정 링크를 메일로 보내드립니다."
+        :"게스트 모드에서는 이 기기에 저장된 계정이므로 즉시 재설정됩니다. 실서비스(Firebase)에서는 재설정 메일이 발송됩니다."}</p>
+      <label for="au-mail">이메일</label>
+      <input id="au-mail" type="email" placeholder="you@example.com" autocomplete="email">
+      ${FB.on?"":`<label for="au-pw">새 비밀번호</label>${pwField("au-pw","6자 이상","new-password")}`}`;
+  }else{
+    body=`
       <div class="auth-tabs">
         <button aria-pressed="${authMode==="login"}" onclick="authMode='login';renderAuth()">로그인</button>
         <button aria-pressed="${authMode==="signup"}" onclick="authMode='signup';renderAuth()">회원가입</button>
@@ -661,14 +737,25 @@ function renderAuth(msg,isErr){
       <input id="au-name" placeholder="예: 목요일의피노" maxlength="12" autocomplete="nickname">`:""}
       <label for="au-mail">이메일</label>
       <input id="au-mail" type="email" placeholder="you@example.com" autocomplete="email">
-      ${FB.on?`<label for="au-pw">비밀번호</label>
-      <input id="au-pw" type="password" placeholder="6자 이상" autocomplete="${authMode==="signup"?"new-password":"current-password"}">`:""}
+      <label for="au-pw">비밀번호</label>
+      ${pwField("au-pw",authMode==="signup"?"6자 이상":"비밀번호",authMode==="signup"?"new-password":"current-password")}
+      ${authMode==="login"?`<button class="link-btn" onclick="authMode='reset';renderAuth()">비밀번호를 잊으셨나요?</button>`:""}`;
+  }
+  const cta=authMode==="signup"?"가입하기":authMode==="reset"?(FB.on?"재설정 메일 보내기":"비밀번호 재설정"):"로그인";
+  document.getElementById("auth-root").innerHTML=`
+  <div class="overlay" onclick="if(event.target===this)closeAuth()">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="계정">
+      <p class="caps">WELCOME TO CAVE</p>
+      ${body}
       <p class="auth-msg${isErr?" err":""}">${msg||note}</p>
-      <button class="btn-primary" onclick="submitAuth()">${authMode==="signup"?"가입하기":"로그인"}</button>
+      <button class="btn-primary" onclick="submitAuth()">${cta}</button>
       <button class="skip" onclick="closeAuth()">나중에 하기</button>
     </div>
   </div>`;
-  setTimeout(()=>{const f=document.getElementById(authMode==="signup"?"au-name":"au-mail");if(f)f.focus()},50);
+  setTimeout(()=>{
+    document.querySelectorAll("#auth-root input").forEach(i=>i.addEventListener("keydown",e=>{if(e.key==="Enter")submitAuth()}));
+    const f=document.getElementById(authMode==="signup"?"au-name":"au-mail");if(f)f.focus();
+  },50);
 }
 function closeAuth(){document.getElementById("auth-root").innerHTML="";afterAuth=null}
 function finishLogin(){
@@ -680,13 +767,35 @@ function finishLogin(){
 async function submitAuth(){
   const mail=(document.getElementById("au-mail").value||"").trim().toLowerCase();
   if(!EMAIL_RE.test(mail)){renderAuth("이메일 형식을 확인해 주세요.",1);return}
+  const pwEl=document.getElementById("au-pw");
+  const pw=pwEl?pwEl.value:"";
+
+  /* ── 비밀번호 찾기 ── */
+  if(authMode==="reset"){
+    if(FB.on){
+      try{
+        await FB.auth.sendPasswordResetEmail(mail);
+        authMode="login";
+        renderAuth(mail+" 주소로 재설정 메일을 보냈습니다. 메일의 링크로 새 비밀번호를 설정한 뒤 로그인해 주세요.");
+      }catch(e){renderAuth(fbErr(e),1)}
+      return;
+    }
+    const acc=accounts.find(a=>a.email===mail);
+    if(!acc){renderAuth("가입되지 않은 이메일입니다.",1);return}
+    if(pw.length<6){renderAuth("새 비밀번호는 6자 이상이어야 합니다.",1);return}
+    acc.hash=await hashPw(pw);saveAccounts();
+    authMode="login";
+    renderAuth("비밀번호가 재설정되었습니다. 새 비밀번호로 로그인해 주세요.");
+    return;
+  }
+
+  /* ── 회원가입 ── */
   if(authMode==="signup"){
     const name=(document.getElementById("au-name").value||"").trim();
     if(name.length<2){renderAuth("닉네임은 2자 이상이어야 합니다.",1);return}
     if(RESERVED.has(name)||accounts.some(a=>a.name===name)){renderAuth("이미 사용 중인 닉네임입니다.",1);return}
+    if(pw.length<6){renderAuth("비밀번호는 6자 이상이어야 합니다.",1);return}
     if(FB.on){
-      const pw=document.getElementById("au-pw").value;
-      if(pw.length<6){renderAuth("비밀번호는 6자 이상이어야 합니다.",1);return}
       try{
         const dup=await FB.db.collection("usernames").doc(name.toLowerCase()).get();
         if(dup.exists){renderAuth("이미 사용 중인 닉네임입니다.",1);return}
@@ -701,11 +810,12 @@ async function submitAuth(){
       return;
     }
     if(accounts.some(a=>a.email===mail)){renderAuth("이미 가입된 이메일입니다. 로그인해 주세요.",1);return}
-    accounts.push({name,email:mail});saveAccounts();
+    accounts.push({name,email:mail,hash:await hashPw(pw)});saveAccounts();
     state.user={name,email:mail};finishLogin();return;
   }
+
+  /* ── 로그인 ── */
   if(FB.on){
-    const pw=document.getElementById("au-pw").value;
     try{
       const cred=await FB.auth.signInWithEmailAndPassword(mail,pw);
       if(!cred.user.emailVerified){
@@ -721,6 +831,12 @@ async function submitAuth(){
   }
   const acc=accounts.find(a=>a.email===mail);
   if(!acc){renderAuth("가입되지 않은 이메일입니다. 회원가입을 먼저 해주세요.",1);return}
+  if(!acc.hash){ /* 비밀번호 도입 이전에 만든 계정 → 지금 입력한 비밀번호를 설정 */
+    if(pw.length<6){renderAuth("이 계정은 아직 비밀번호가 없습니다. 6자 이상 입력하면 지금 설정됩니다.",1);return}
+    acc.hash=await hashPw(pw);saveAccounts();
+  }else if(acc.hash!==await hashPw(pw)){
+    renderAuth("비밀번호가 올바르지 않습니다. ‘비밀번호를 잊으셨나요?’에서 재설정할 수 있습니다.",1);return;
+  }
   state.user={name:acc.name,email:acc.email};finishLogin();
 }
 function fbErr(e){
@@ -765,7 +881,7 @@ function renderGrid(){
   document.getElementById("count-line").textContent=list.length+"종의 와인";
   document.getElementById("grid").innerHTML=list.length?list.map(w=>`
     <button class="card" onclick="go('detail','${w.id}')">
-      <div class="bottle-wrap">${bottle(w.cls,w.vintage)}</div>
+      <div class="bottle-wrap bw-${w.cls.slice(2)}">${bottle(w.cls,w.vintage)}</div>
       <div class="info">
         <div class="region">${w.country} · ${w.region}</div>
         <div class="name">${w.ko}</div>
@@ -1011,7 +1127,7 @@ function renderDetail(id){
   document.getElementById("view-detail").innerHTML=`
     <button class="backbar" onclick="go('explore')">← 탐색으로</button>
     <div class="d-head">
-      <div class="d-bottle">${bottle(w.cls,w.vintage)}</div>
+      <div class="d-bottle bw-${w.cls.slice(2)}">${bottle(w.cls,w.vintage)}</div>
       <div class="d-title">
         <div class="region">${w.country} · ${w.region}</div>
         <h2>${w.ko}</h2>
@@ -1260,5 +1376,5 @@ function toast(msg){
   const t=document.getElementById("toast");t.textContent=msg;t.classList.add("on");
   clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("on"),2200);
 }
-renderUser();renderChips();renderGrid();
+renderUser();renderChips();renderGrid();renderFeature();
 </script>
