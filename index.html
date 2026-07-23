@@ -937,7 +937,9 @@ async function loadMemberKey(){
         state.user={name:u.displayName||u.email.split("@")[0],email:u.email,uid:u.uid};
         loadMemberKey();
       }else{
-        if(state.user&&state.user.uid)state.user=null;
+        /* 서버 모드에서는 Firebase 세션이 없으면 로그인 상태로 취급하지 않는다
+           (게스트 시절 기기에 남은 옛 계정이 가짜 로그인으로 보이는 문제 차단) */
+        state.user=null;
         memberKey="";
       }
       persist();renderUser();
@@ -1235,6 +1237,20 @@ async function ensureKey(){
   if(getGeminiKey())return true;
   if(state.user&&FB.on&&FB.auth.currentUser)await loadMemberKey();
   return !!getGeminiKey();
+}
+/* 키를 못 받는 정확한 이유를 사용자에게 보여주기 위한 진단 */
+async function keyDiag(){
+  if(!FB.on)return "서버 연결이 안 된 환경입니다.";
+  if(!FB.auth.currentUser)return "Firebase 로그인 세션이 없습니다 — 로그아웃 후 이메일·비밀번호로 다시 로그인해 주세요.";
+  if(!FB.auth.currentUser.emailVerified)return "이메일 인증이 완료되지 않은 계정입니다 — 메일함의 인증 링크를 눌러주세요.";
+  try{
+    const d=await FB.db.collection("config").doc("gemini").get();
+    if(!d.exists)return "서버에 config/gemini 문서가 없습니다 — Firestore에서 문서를 만들어 주세요.";
+    const o=d.data()||{};
+    return "config/gemini 문서의 필드["+Object.keys(o).join(", ")+"]에서 유효한 키(AQ. 또는 AIza로 시작)를 찾지 못했습니다 — 값 칸을 확인해 주세요.";
+  }catch(e){
+    return "서버에서 키 읽기가 거부되었습니다("+(e.code||e)+") — Firestore 규칙의 config 블록을 확인해 주세요.";
+  }
 }
 function setGeminiKey(){
   const k=prompt("Gemini API 키를 붙여넣으세요.\n(https://aistudio.google.com/apikey 에서 발급 · 이 브라우저에만 저장됩니다)");
@@ -1605,11 +1621,17 @@ async function composeSearch(){
     <div><div class="nm">${x.ko}</div><div class="why">${x.country} · ${x.region}</div></div>
     <div class="pr">₩${FMT(avgPrice(x))}<small>평균가</small></div></button>`).join("");
   if(!(await ensureKey())){
-    out.innerHTML=(locHtml||"")+(state.user
-      ?`<p class="rv-empty">내장 ${loc.length}건 표시 중 — 전 세계 검색 키가 아직 연결되지 않았습니다.
-        <button class="link-btn" style="display:inline;margin:0" onclick="setGeminiKey()">직접 키 연결</button></p>`
-      :`<p class="rv-empty">내장 ${loc.length}건 표시 중 —
-        <button class="link-btn" style="display:inline;margin:0" onclick="openAuth()">로그인</button>하면 전 세계 와인에서 검색됩니다.</p>`);
+    if(state.user){
+      out.innerHTML=(locHtml||"")+`<p class="rv-empty">전 세계 검색 키를 받지 못했습니다.<br>
+        <b style="color:var(--accent)">원인 진단 중…</b></p>`;
+      const why=await keyDiag();
+      out.innerHTML=(locHtml||"")+`<p class="rv-empty">전 세계 검색 키를 받지 못했습니다.<br>
+        <b style="color:var(--accent)">진단: ${esc(why)}</b><br>
+        <button class="link-btn" style="display:inline;margin:6px 0 0" onclick="setGeminiKey()">임시로 직접 키 연결</button></p>`;
+    }else{
+      out.innerHTML=(locHtml||"")+`<p class="rv-empty">내장 ${loc.length}건 표시 중 —
+        <button class="link-btn" style="display:inline;margin:0" onclick="openAuth()">로그인</button>하면 전 세계 와인에서 검색됩니다.</p>`;
+    }
     return;
   }
   out.innerHTML=locHtml+`<div class="thinking" style="padding:12px 0"><i></i><i></i><i></i></div>`;
