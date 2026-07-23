@@ -726,7 +726,9 @@ const reactLoaded=new Set();
 function allPublicReviews(){
   const local=state.notes.filter(n=>n.public!==false).map((n,i)=>({...n,rid:"loc-"+(n.id||i)}));
   const seed=SEED_RV.map((r,i)=>({...r,rid:"seed-"+i}));
-  return[...(remoteWeekly||[]),...local,...seed];
+  /* 내 후기는 사진이 있는 로컬 사본을 우선하고, 서버에서 온 중복 사본은 제외 */
+  const remote=(remoteWeekly||[]).filter(rm=>!local.some(l=>l.text===rm.text&&l.user===rm.user));
+  return[...local,...remote,...seed];
 }
 function getReacts(rid){
   const base={wow:0,help:0,cheers:0,mine:null};
@@ -804,6 +806,7 @@ function renderFeature(){
        :`<span class="wine-link" style="color:var(--ink)">${esc(name)}</span>`}
     <p class="rv-txt" style="margin-top:6px">${esc(r.text)}</p>
     ${r.tags&&r.tags.length?`<div class="rv-tags">${r.tags.map(t=>`<span>${esc(t)}</span>`).join("")}</div>`:""}
+    ${r.photos&&r.photos.length?`<div class="rv-photos">${r.photos.map(p=>`<img src="${p}" alt="후기 사진">`).join("")}</div>`:""}
     <div class="react-bar">${REACTS.map(x=>`
       <button class="react" aria-pressed="${rc.mine===x.k}" onclick="doReact('${r.rid}','${x.k}')">${x.e} ${x.t} <b>${rc[x.k]||0}</b></button>`).join("")}
     </div>
