@@ -75,6 +75,16 @@ nav.tabs button:hover{color:var(--ink)}
 .hero h1{margin:8px 0 0;font-size:clamp(26px,4.5vw,34px);font-weight:400;line-height:1.28;letter-spacing:-.01em;text-wrap:balance}
 .hero h1 b{font-weight:400;font-style:italic;color:var(--accent)}
 .hero p{margin:10px 0 0;color:var(--ink2);font-size:14.5px;max-width:56ch}
+.hero-min{margin:54px 0 24px;text-align:center}
+.hero-min h1{font-size:clamp(23px,3.8vw,31px);transition:opacity .5s ease}
+
+/* 풀스크린 웰컴 */
+.welcome{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;align-items:center;justify-content:center;
+  text-align:center;transition:opacity .45s ease;padding:24px}
+.w-logo{font-size:clamp(42px,9vw,66px);font-style:italic;letter-spacing:.04em;line-height:1.15;margin:12px 0 8px}
+.w-tag{color:var(--ink2);font-size:15px;letter-spacing:.08em;margin:0 0 38px}
+.w-rule{width:44px;height:1px;background:var(--gold);margin:0 auto 26px;opacity:.7}
+.w-start{padding:14px 46px;font-size:15px}
 
 .searchbar{display:flex;align-items:center;gap:12px;background:var(--surface);
   border:1px solid var(--line);border-radius:999px;padding:9px 10px 9px 22px;transition:border-color .15s}
@@ -401,10 +411,8 @@ footer.app{margin-top:64px;padding-top:22px;border-top:1px solid var(--hair);fon
 
 <div class="shell">
 <main id="view-explore">
-  <div class="hero">
-    <p class="caps">CURATED SELECTION</p>
-    <h1>오늘 밤, 어떤 <b>한 병</b>을<br>열어볼까요</h1>
-    <p>평론가 점수·빈티지 작황·국내 평균가·애호가들의 후기까지, 한 화면에서.</p>
+  <div class="hero hero-min">
+    <h1 id="hero-q">어떤 와인을 찾으세요?</h1>
   </div>
 
   <div class="searchbar">
@@ -451,6 +459,16 @@ footer.app{margin-top:64px;padding-top:22px;border-top:1px solid var(--hair);fon
 
 <div id="auth-root"></div>
 <div class="toast" id="toast">저장되었습니다</div>
+
+<div id="welcome" class="welcome hidden">
+  <div>
+    <p class="caps" style="color:var(--gold)">WINE INTELLIGENCE</p>
+    <div class="w-logo serif">After Wine</div>
+    <p class="w-tag">와인, 그 후의 기록</p>
+    <div class="w-rule"></div>
+    <button class="btn-primary w-start" onclick="startApp()">시작하기</button>
+  </div>
+</div>
 
 <script src="config.js"></script>
 <script>
@@ -1733,5 +1751,24 @@ function toast(msg){
   const t=document.getElementById("toast");t.textContent=msg;t.classList.add("on");
   clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("on"),2200);
 }
+/* 헤드라인 두 문구 로테이션 */
+const HERO_QS=["어떤 와인을 찾으세요?","어떤 와인 드셨나요?"];
+let heroIdx=0;
+setInterval(()=>{
+  const el=document.getElementById("hero-q");
+  if(!el||document.getElementById("view-explore").classList.contains("hidden"))return;
+  el.style.opacity=0;
+  setTimeout(()=>{heroIdx=(heroIdx+1)%HERO_QS.length;el.textContent=HERO_QS[heroIdx];el.style.opacity=1},500);
+},4500);
+
+/* 첫 방문 웰컴 */
+function startApp(){
+  const w=document.getElementById("welcome");
+  w.style.opacity=0;
+  setTimeout(()=>w.classList.add("hidden"),450);
+  try{localStorage.setItem("aw-welcomed","1")}catch(e){}
+}
+try{if(!localStorage.getItem("aw-welcomed"))document.getElementById("welcome").classList.remove("hidden")}catch(e){}
+
 renderUser();renderChips();renderGrid();renderFeature();renderRank();
 </script>
