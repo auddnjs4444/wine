@@ -2,7 +2,7 @@
 <html lang="ko">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CAVE — 와인 인텔리전스</title>
+<title>AFTER WINE — 와인 인텔리전스</title>
 <style>
 /* ═══════ tokens ═══════ */
 :root{
@@ -53,8 +53,9 @@ input,textarea,select{font:inherit;color:inherit}
 header.app{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--bg) 88%,transparent);
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--hair);padding:0 22px}
 .app-inner{max-width:880px;margin:0 auto;display:flex;align-items:center;height:62px}
-.brand{display:flex;align-items:baseline;gap:10px;margin-right:34px}
-.brand .mark{font-size:22px;letter-spacing:.2em;font-style:italic}
+.brand{display:flex;align-items:baseline;gap:10px;margin-right:34px;cursor:pointer}
+.brand:hover .mark{color:var(--accent)}
+.brand .mark{font-size:21px;letter-spacing:.06em;font-style:italic;transition:color .15s;white-space:nowrap}
 .brand .sub{font-size:10.5px;color:var(--ink3);letter-spacing:.14em}
 nav.tabs{display:flex;gap:26px;align-self:stretch}
 nav.tabs button{font-size:14px;color:var(--ink3);border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s}
@@ -388,7 +389,9 @@ footer.app{margin-top:64px;padding-top:22px;border-top:1px solid var(--hair);fon
 </defs></svg>
 
 <header class="app"><div class="app-inner">
-  <div class="brand"><span class="mark serif">CAVE</span><span class="sub">WINE INTELLIGENCE</span></div>
+  <button class="brand" onclick="go('explore')" aria-label="홈으로">
+    <span class="mark serif">After Wine</span><span class="sub">WINE INTELLIGENCE</span>
+  </button>
   <nav class="tabs" aria-label="주 메뉴">
     <button id="tab-explore" aria-current="true" onclick="go('explore')">탐색</button>
     <button id="tab-cellar" aria-current="false" onclick="go('cellar')">마이 셀러</button>
@@ -440,7 +443,7 @@ footer.app{margin-top:64px;padding-top:22px;border-top:1px solid var(--hair);fon
 <main id="view-cellar" class="hidden"></main>
 
 <footer class="app">
-  CAVE — 평론가 점수는 Robert Parker Wine Advocate·Wine Spectator·James Suckling 공표 기준, 평균가는 국내 주요 판매처 표본가의 산술평균이며 주기적으로 갱신됩니다.
+  After Wine — 평론가 점수는 Robert Parker Wine Advocate·Wine Spectator·James Suckling 공표 기준, 평균가는 국내 주요 판매처 표본가의 산술평균이며 주기적으로 갱신됩니다.
   빈티지 차트는 산지별 작황 지수 기준입니다.<br>
   config.js에 Gemini API 키를 연결하면 전 세계 와인 검색이, Firebase를 연결하면 실계정(이메일 인증)과 사용자 간 후기 공유가 활성화됩니다.
 </footer>
@@ -901,7 +904,7 @@ function renderAuth(msg,isErr){
   document.getElementById("auth-root").innerHTML=`
   <div class="overlay" onclick="if(event.target===this)closeAuth()">
     <div class="modal" role="dialog" aria-modal="true" aria-label="계정">
-      <p class="caps">WELCOME TO CAVE</p>
+      <p class="caps">WELCOME TO AFTER WINE</p>
       ${body}
       <p class="auth-msg${isErr?" err":""}">${msg||note}</p>
       <button class="btn-primary" onclick="submitAuth()">${cta}</button>
