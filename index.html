@@ -980,13 +980,29 @@ function askSommelier(q){
   return{intro,picks:pool.slice(0,3),reasons};
 }
 function esc(s){return String(s||"").replace(/</g,"&lt;")}
+/* 키 우선순위: config.js → 내 브라우저(localStorage).
+   공개 저장소에 키를 올리면 GitHub가 차단하므로, 사이트에서 직접 입력하는 방식을 지원 */
+function getGeminiKey(){
+  try{return CFG.geminiKey||localStorage.getItem("cave2-gemini")||""}
+  catch(e){return CFG.geminiKey||""}
+}
+function setGeminiKey(){
+  const k=prompt("Gemini API 키를 붙여넣으세요.\n(https://aistudio.google.com/apikey 에서 발급 · 이 브라우저에만 저장됩니다)");
+  if(k===null)return;
+  const v=k.trim();
+  if(!v){try{localStorage.removeItem("cave2-gemini")}catch(e){};toast("AI 키를 삭제했습니다");return}
+  if(!/^(AIza|AQ\.)/.test(v)){toast("키 형식이 올바르지 않습니다 (AIza… 또는 AQ.…)");return}
+  try{localStorage.setItem("cave2-gemini",v)}catch(e){}
+  toast("AI 키가 연결되었습니다 — 전 세계 와인 검색 활성화");
+  if(document.getElementById("q").value.trim())runAI();
+}
 async function geminiAsk(q){
   const prompt=`너는 한국의 와인 전문 소믈리에다. 사용자의 질문에 맞는 와인을 전 세계 와인 중에서 추천하라.
 반드시 아래 JSON 형식만 출력하라(다른 텍스트 금지):
 {"intro":"한두 문장의 답변","picks":[{"ko":"한글 이름","en":"영문 이름","country":"국가","region":"산지","type":"레드|화이트|스파클링|스위트|로제","price":"한국 예상 평균가(예: ₩85,000)","score":"평론가 점수 숫자(모르면 빈 문자열)","why":"추천 이유 한 문장"}]}
 picks는 정확히 3개. 실존하는 와인만. 한국에서 구할 수 있는 와인을 우선하라.
 질문: ${q}`;
-  const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key="+encodeURIComponent(CFG.geminiKey),{
+  const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key="+encodeURIComponent(getGeminiKey()),{
     method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({contents:[{parts:[{text:prompt}]}],
       generationConfig:{responseMimeType:"application/json",temperature:.7}})});
@@ -1015,7 +1031,7 @@ async function runAI(){
   if(!q){out.innerHTML="";document.getElementById("q").focus();return}
   out.innerHTML=`<div class="ai-card"><div class="who"><span class="caps">AI SOMMELIER</span></div>
     <div class="thinking" role="status" aria-label="분석 중"><i></i><i></i><i></i></div></div>`;
-  if(CFG.geminiKey){
+  if(getGeminiKey()){
     try{
       const res=await geminiAsk(q);
       const html=(res.picks||[]).slice(0,3).map(p=>{
@@ -1040,7 +1056,8 @@ async function runAI(){
         <div><div class="nm">${w.ko}</div><div class="why">${reasons[w.id]||""}</div></div>
         <div class="pr">₩${FMT(avgPrice(w))}<small>평균가</small></div></button>`).join("");
     renderAIcard(q,intro,html,
-      CFG.geminiKey?"":`<p class="search-hint" style="margin:12px 0 0">config.js에 Gemini API 키를 넣으면 전 세계 와인 검색으로 확장됩니다</p>`);
+      getGeminiKey()?"":`<p class="search-hint" style="margin:12px 0 0">지금은 앱에 담긴 24종에서 추천 중 —
+        <button class="link-btn" style="display:inline;margin:0" onclick="setGeminiKey()">Gemini API 키 연결</button>하면 전 세계 와인 검색으로 확장됩니다</p>`);
   },850);
 }
 
