@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>After Wine — 테마 시안 4종</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0C0A09;color:#EDE6DE;font-family:'Apple SD Gothic Neo','Pretendard','Malgun Gothic',sans-serif;-webkit-font-smoothing:antialiased}
+.serif{font-family:'Didot','Bodoni MT','Playfair Display',Georgia,serif}
+a{color:inherit;text-decoration:none}
+.tag{max-width:1200px;margin:0 auto;padding:44px 24px 14px;display:flex;align-items:baseline;gap:12px}
+.tag .n{display:inline-flex;width:30px;height:30px;border-radius:50%;background:#8E2A3E;color:#fff;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex:none;transform:translateY(4px)}
+.tag h2{font-size:19px;font-weight:700;letter-spacing:.01em}
+.tag p{font-size:13px;color:#9C8F86}
+.frame{max-width:1200px;margin:0 auto 8px;height:640px;position:relative;overflow:hidden;border-radius:14px}
+@media(max-width:700px){.frame{height:540px}}
+.cap{font-size:10.5px;letter-spacing:.3em;font-weight:700}
+.foot{max-width:1200px;margin:30px auto 60px;padding:0 24px;font-size:12px;color:#6E635C;line-height:1.8}
+
+/* ═══ 시안 1 — 시네마틱 풀블리드 ═══ */
+.v1{background:url('https://images.unsplash.com/photo-1585553616435-2dc0a54e271d?q=80&w=1800&auto=format&fit=crop') center/cover}
+.v1::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,7,6,.55),rgba(10,7,6,.25) 40%,rgba(10,7,6,.82))}
+.v1 .in{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
+.v1 .cap{color:#D8B77A}
+.v1 h1{font-size:clamp(56px,10vw,110px);font-style:italic;font-weight:400;line-height:1.02;margin:16px 0 10px;text-shadow:0 4px 40px rgba(0,0,0,.5)}
+.v1 .sub{font-size:clamp(15px,2vw,19px);color:#E5D8CB;letter-spacing:.06em}
+.v1 .cta{margin-top:44px;font-size:14px;letter-spacing:.22em;font-weight:700;color:#F3EAE0;border-bottom:1px solid #D8B77A;padding-bottom:8px;transition:letter-spacing .3s}
+.v1 .cta:hover{letter-spacing:.34em}
+.v1 .nav{position:absolute;top:0;left:0;right:0;z-index:3;display:flex;justify-content:space-between;padding:26px 34px;font-size:12px;letter-spacing:.18em;color:#CDBFB2}
+
+/* ═══ 시안 2 — 에디토리얼 스플릿 ═══ */
+.v2{display:flex;background:#0E0B0A}
+.v2 .left{flex:1.15;padding:54px 48px;display:flex;flex-direction:column;position:relative}
+.v2 .cap{color:#8E2A3E}
+.v2 h1{font-size:clamp(54px,8vw,96px);line-height:.95;font-weight:400;letter-spacing:.01em;margin:26px 0 0;text-transform:uppercase}
+.v2 h1 em{font-style:italic;color:#D8B77A}
+.v2 .idx{margin-top:auto;border-top:1px solid #2A211D}
+.v2 .idx a{display:flex;gap:18px;align-items:baseline;padding:15px 2px;border-bottom:1px solid #2A211D;font-size:15px;color:#C9BBAE;transition:all .2s}
+.v2 .idx a:hover{color:#F3EAE0;padding-left:14px;background:linear-gradient(90deg,rgba(142,42,62,.18),transparent)}
+.v2 .idx .no{font-size:11px;color:#8E2A3E;font-weight:700}
+.v2 .idx .en{margin-left:auto;font-size:10.5px;letter-spacing:.2em;color:#5E534C}
+.v2 .right{flex:1;background:url('https://images.unsplash.com/photo-1562601579-599dec564e06?q=80&w=1200&auto=format&fit=crop') center/cover;position:relative}
+.v2 .right::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#0E0B0A,transparent 35%)}
+@media(max-width:700px){.v2 .right{display:none}}
+
+/* ═══ 시안 3 — 매거진 그리드 ═══ */
+.v3{background:#0C0A09;padding:40px 36px;display:flex;flex-direction:column}
+.v3 .strip{white-space:nowrap;overflow:hidden;border-top:1px solid #2A211D;border-bottom:1px solid #2A211D;padding:10px 0;font-size:13px;letter-spacing:.24em;color:#9C8F86}
+.v3 h1{font-size:clamp(40px,6.4vw,76px);font-weight:400;line-height:1.04;margin:30px 0 8px}
+.v3 h1 em{font-style:italic;color:#D8B77A}
+.v3 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:28px;flex:1;min-height:0}
+@media(max-width:700px){.v3 .grid{grid-template-columns:1fr}}
+.v3 .cell{position:relative;overflow:hidden;border-radius:10px;min-height:220px}
+.v3 .cell img{width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.72) saturate(.9);transition:transform .6s cubic-bezier(.2,.8,.2,1),filter .4s}
+.v3 .cell:hover img{transform:scale(1.06);filter:brightness(.9)}
+.v3 .cell .lb{position:absolute;left:16px;bottom:14px;z-index:2}
+.v3 .cell .no{font-size:11px;color:#D8B77A;letter-spacing:.2em}
+.v3 .cell .t{font-size:19px;font-weight:700;margin-top:2px}
+
+/* ═══ 시안 4 — 다크 아카이브 ═══ */
+.v4{background:#0A0807;display:flex;align-items:center;justify-content:center}
+.v4 .ghost{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.v4 .ghost span{font-size:clamp(90px,17vw,210px);font-weight:400;letter-spacing:.02em;color:transparent;-webkit-text-stroke:1px rgba(216,183,122,.16);white-space:nowrap}
+.v4 .card{position:relative;z-index:2;text-align:center}
+.v4 .ph{width:min(300px,64vw);height:min(400px,56vh);margin:0 auto;border:1px solid rgba(216,183,122,.45);padding:10px;border-radius:170px 170px 12px 12px}
+.v4 .ph img{width:100%;height:100%;object-fit:cover;border-radius:160px 160px 8px 8px;filter:brightness(.85)}
+.v4 .cap{color:#D8B77A;margin-top:26px;display:block}
+.v4 h1{font-size:34px;font-style:italic;font-weight:400;margin:8px 0 4px}
+.v4 .sub{font-size:13px;color:#9C8F86;letter-spacing:.1em}
+.v4 .cta{display:inline-block;margin-top:24px;font-size:12px;letter-spacing:.26em;color:#EDE6DE;border:1px solid #3A2E28;border-radius:999px;padding:12px 34px;transition:all .25s}
+.v4 .cta:hover{border-color:#D8B77A;color:#D8B77A}
+
+.intro{max-width:1200px;margin:0 auto;padding:56px 24px 8px}
+.intro .cap{color:#D8B77A}
+.intro h1{font-size:clamp(26px,4vw,38px);font-weight:400;margin:10px 0 6px}
+.intro p{font-size:14px;color:#9C8F86;line-height:1.8;max-width:64ch}
+</style>
+
+<div class="intro">
+  <span class="cap">AFTER WINE — THEME PREVIEW</span>
+  <h1 class="serif"><em>Normal is boring</em> × 셀러 포토그래피 — 시안 4종</h1>
+  <p>참고해주신 어워즈 스타일(거대 타이포그래피 · 에디토리얼 · 그리드 · 미니멀)에 보내주신 것과 같은 계열의 다크 셀러 사진을 조합했습니다. 마음에 드는 번호를 알려주시면 실제 앱 전체에 적용합니다.</p>
+</div>
+
+<div class="tag"><span class="n">1</span><div><h2>시네마틱 풀블리드</h2><p>셀러 사진을 화면 가득 — 그 위에 거대한 세리프 이탤릭 로고. 가장 영화적인 첫인상</p></div></div>
+<section class="frame v1">
+  <div class="nav"><span>AFTER WINE</span><span>탐색 · 마이 셀러 · 로그인</span></div>
+  <div class="in">
+    <span class="cap">WINE INTELLIGENCE</span>
+    <h1 class="serif">After Wine</h1>
+    <p class="sub">어떤 와인을 찾으세요?</p>
+    <a class="cta" href="#">시작하기</a>
+  </div>
+</section>
+
+<div class="tag"><span class="n">2</span><div><h2>에디토리얼 스플릿</h2><p>왼쪽은 잡지 목차처럼 큰 타이포와 메뉴 인덱스, 오른쪽은 세로 셀러 사진 — 어워즈 레퍼런스와 가장 가까운 구성</p></div></div>
+<section class="frame v2">
+  <div class="left">
+    <span class="cap">EST. 2026 — WINE INTELLIGENCE</span>
+    <h1 class="serif">After<br><em>Wine</em></h1>
+    <nav class="idx">
+      <a href="#"><span class="no">01</span> 와인 탐색 <span class="en">DISCOVER</span></a>
+      <a href="#"><span class="no">02</span> 이 주의 후기 <span class="en">REVIEW</span></a>
+      <a href="#"><span class="no">03</span> AI 소믈리에 <span class="en">SOMMELIER</span></a>
+      <a href="#"><span class="no">04</span> 마이 셀러 <span class="en">MY CELLAR</span></a>
+    </nav>
+  </div>
+  <div class="right"></div>
+</section>
+
+<div class="tag"><span class="n">3</span><div><h2>매거진 그리드</h2><p>헤드라인 스트립 + 사진 3분할 그리드, 호버 시 사진이 살아나는 인터랙션 — 콘텐츠가 많아 보이는 구성</p></div></div>
+<section class="frame v3">
+  <div class="strip">AFTER WINE — 와인, 그 후의 기록 — REVIEW · PRICE · VINTAGE — AFTER WINE — 와인, 그 후의 기록 — REVIEW · PRICE · VINTAGE</div>
+  <h1 class="serif">마신 만큼 남는 것,<br><em>기록.</em></h1>
+  <div class="grid">
+    <a class="cell" href="#"><img src="https://images.unsplash.com/photo-1557871318-4136a587b30a?q=80&w=900&auto=format&fit=crop" alt=""><div class="lb"><div class="no">01</div><div class="t">탐색</div></div></a>
+    <a class="cell" href="#"><img src="https://images.unsplash.com/photo-1600135931802-9fb1abbe8265?q=80&w=900&auto=format&fit=crop" alt=""><div class="lb"><div class="no">02</div><div class="t">이 주의 후기</div></div></a>
+    <a class="cell" href="#"><img src="https://images.unsplash.com/photo-1626895903360-fef8b970c8de?q=80&w=900&auto=format&fit=crop" alt=""><div class="lb"><div class="no">03</div><div class="t">마이 셀러</div></div></a>
+  </div>
+</section>
+
+<div class="tag"><span class="n">4</span><div><h2>다크 아카이브</h2><p>아치형 창에 담긴 사진 한 장과 배경의 고스트 타이포 — 가장 절제되고 갤러리 같은 무드</p></div></div>
+<section class="frame v4">
+  <div class="ghost"><span class="serif">AFTER WINE</span></div>
+  <div class="card">
+    <div class="ph"><img src="https://images.unsplash.com/photo-1565151461167-84645f3f7788?q=80&w=800&auto=format&fit=crop" alt=""></div>
+    <span class="cap">WINE INTELLIGENCE</span>
+    <h1 class="serif">After Wine</h1>
+    <p class="sub">와인, 그 후의 기록</p>
+    <a class="cta" href="#">시작하기</a>
+  </div>
+</section>
+
+<p class="foot">사진: Unsplash 무료 라이선스 (상업적 사용 가능·저작자 표기 불필요). 실제 적용 시 시작 페이지뿐 아니라 카드·상세 화면까지 같은 언어로 확장합니다.<br>이 페이지는 시안 확인용입니다 — afterwine 앱과는 별개 주소예요.</p>
+</html>
