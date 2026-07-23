@@ -901,8 +901,16 @@ async function loadMemberKey(){
   if(!FB.on||!FB.auth.currentUser){memberKey="";return}
   try{
     const d=await FB.db.collection("config").doc("gemini").get();
-    memberKey=(d.exists&&d.data().key)||"";
-  }catch(e){memberKey=""}
+    const o=d.exists?(d.data()||{}):{};
+    /* 필드명이 key가 아니어도 흔한 이름들을 모두 인식 */
+    let k=String(o.key||o.apiKey||o.geminiKey||o.value||"").trim();
+    if(!/^(AIza|AQ\.)/.test(k)){
+      if(d.exists)console.warn("config/gemini 문서에 유효한 키 필드가 없습니다. 필드값:",Object.keys(o));
+      else console.warn("config/gemini 문서가 없습니다.");
+      k="";
+    }
+    memberKey=k;
+  }catch(e){memberKey="";console.warn("config/gemini 읽기 실패",e.code||e)}
 }
 (async function initFirebase(){
   const cfg=CFG.firebase;
