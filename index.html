@@ -1,0 +1,1264 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAVE — 와인 인텔리전스</title>
+<style>
+/* ═══════ tokens ═══════ */
+:root{
+  --bg:#FAF9F7; --surface:#FFFFFF; --sunken:#F2EFEB; --hover:#F6F3EF;
+  --ink:#191416; --ink2:#645A5E; --ink3:#9C9195; --line:#E7E2DD; --hair:#EFEBE6;
+  --accent:#8E2A3E; --accent-ink:#FBF7F4; --accent-soft:#F6E9EC;
+  --gold:#93762F; --ok:#3E6B4F; --warn:#8A6D1F;
+  --glass-red1:#802639; --glass-red2:#33101B;
+  --glass-wht1:#D5BE7F; --glass-wht2:#8F7A3F;
+  --glass-spk1:#A3925F; --glass-spk2:#544829;
+  --glass-swt1:#C89A3F; --glass-swt2:#6E4F17;
+  --r:18px; --rs:12px;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#131013; --surface:#1B171A; --sunken:#221D21; --hover:#241F23;
+  --ink:#F1EBE8; --ink2:#B4A8AC; --ink3:#7D7276; --line:#332C30; --hair:#282226;
+  --accent:#D67C8C; --accent-ink:#1A0D11; --accent-soft:#3A2229;
+  --gold:#CFAC64; --ok:#8FBF9F; --warn:#D6B455;
+}}
+:root[data-theme="dark"]{
+  --bg:#131013; --surface:#1B171A; --sunken:#221D21; --hover:#241F23;
+  --ink:#F1EBE8; --ink2:#B4A8AC; --ink3:#7D7276; --line:#332C30; --hair:#282226;
+  --accent:#D67C8C; --accent-ink:#1A0D11; --accent-soft:#3A2229;
+  --gold:#CFAC64; --ok:#8FBF9F; --warn:#D6B455;
+}
+:root[data-theme="light"]{
+  --bg:#FAF9F7; --surface:#FFFFFF; --sunken:#F2EFEB; --hover:#F6F3EF;
+  --ink:#191416; --ink2:#645A5E; --ink3:#9C9195; --line:#E7E2DD; --hair:#EFEBE6;
+  --accent:#8E2A3E; --accent-ink:#FBF7F4; --accent-soft:#F6E9EC;
+  --gold:#93762F; --ok:#3E6B4F; --warn:#8A6D1F;
+}
+
+/* ═══════ base ═══════ */
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);
+  font-family:'Apple SD Gothic Neo','Pretendard','Malgun Gothic','Noto Sans KR',sans-serif;
+  font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.serif{font-family:'Didot','Bodoni MT','Playfair Display',Georgia,'Times New Roman',serif}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;padding:0}
+input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.shell{max-width:880px;margin:0 auto;padding:0 22px 90px}
+.caps{font-size:11px;letter-spacing:.22em;font-weight:700;color:var(--ink3)}
+
+/* ═══════ header ═══════ */
+header.app{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--hair);padding:0 22px}
+.app-inner{max-width:880px;margin:0 auto;display:flex;align-items:center;height:62px}
+.brand{display:flex;align-items:baseline;gap:10px;margin-right:34px}
+.brand .mark{font-size:22px;letter-spacing:.2em;font-style:italic}
+.brand .sub{font-size:10.5px;color:var(--ink3);letter-spacing:.14em}
+nav.tabs{display:flex;gap:26px;align-self:stretch}
+nav.tabs button{font-size:14px;color:var(--ink3);border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s}
+nav.tabs button[aria-current="true"]{color:var(--ink);font-weight:700;border-color:var(--accent)}
+nav.tabs button:hover{color:var(--ink)}
+.user-slot{margin-left:auto}
+.user-chip{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--ink2)}
+.user-chip:hover{color:var(--ink)}
+.avatar{width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--accent-ink);
+  display:inline-flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800}
+.login-link{font-size:13.5px;font-weight:700;color:var(--accent);border:1px solid var(--line);border-radius:999px;padding:7px 16px;transition:border-color .15s}
+.login-link:hover{border-color:var(--accent)}
+
+/* ═══════ explore ═══════ */
+.hero{margin:44px 0 30px}
+.hero .caps{color:var(--gold)}
+.hero h1{margin:8px 0 0;font-size:clamp(26px,4.5vw,34px);font-weight:400;line-height:1.28;letter-spacing:-.01em;text-wrap:balance}
+.hero h1 b{font-weight:400;font-style:italic;color:var(--accent)}
+.hero p{margin:10px 0 0;color:var(--ink2);font-size:14.5px;max-width:56ch}
+
+.searchbar{display:flex;align-items:center;gap:12px;background:var(--surface);
+  border:1px solid var(--line);border-radius:999px;padding:9px 10px 9px 22px;transition:border-color .15s}
+.searchbar:focus-within{border-color:var(--accent)}
+.searchbar svg{flex:none;opacity:.4}
+.searchbar input{flex:1;border:none;background:none;outline:none;font-size:15px;min-width:0}
+.searchbar input::placeholder{color:var(--ink3)}
+.ai-btn{flex:none;display:flex;align-items:center;gap:7px;background:var(--ink);color:var(--bg);
+  padding:10px 20px;border-radius:999px;font-size:13.5px;font-weight:700;transition:opacity .15s}
+.ai-btn:hover{opacity:.85}
+.search-hint{margin:10px 6px 0;font-size:12.5px;color:var(--ink3)}
+.search-hint button{color:var(--ink2);font-weight:600;border-bottom:1px dotted var(--ink3)}
+.search-hint button:hover{color:var(--accent);border-color:var(--accent)}
+
+.ai-card{margin-top:18px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:22px 24px}
+.ai-card .who{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.ai-card .who .caps{color:var(--accent);letter-spacing:.16em}
+.ai-close{margin-left:auto;color:var(--ink3);font-size:12.5px}
+.ai-close:hover{color:var(--ink)}
+.ai-q{font-size:14px;color:var(--ink3);font-style:italic;margin:0 0 6px}
+.ai-card p.a{margin:0;font-size:14.5px}
+.ai-picks{display:flex;flex-direction:column;margin-top:14px;border-top:1px solid var(--hair)}
+.ai-pick{display:flex;align-items:center;gap:14px;padding:13px 2px;border-bottom:1px solid var(--hair);text-align:left;width:100%;transition:background .12s}
+.ai-pick:hover{background:var(--hover)}
+.ai-pick .nm{font-weight:700;font-size:14.5px}
+.ai-pick .why{font-size:12.5px;color:var(--ink2)}
+.ai-pick .pr{margin-left:auto;flex:none;text-align:right;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.ai-pick .pr small{display:block;font-size:10.5px;color:var(--ink3);font-weight:500}
+.thinking{display:inline-flex;gap:5px;padding:6px 0}
+.thinking i{width:5px;height:5px;border-radius:50%;background:var(--accent);animation:pl 1s infinite ease-in-out}
+.thinking i:nth-child(2){animation-delay:.15s}.thinking i:nth-child(3){animation-delay:.3s}
+@keyframes pl{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
+
+.toolbar{display:flex;align-items:center;gap:8px;margin:26px 0 18px}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;flex:1}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;padding:6px 15px;border:1px solid var(--line);border-radius:999px;font-size:13px;color:var(--ink2);background:var(--surface);transition:all .13s;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg);font-weight:600}
+.sort{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:12.5px;color:var(--ink2);outline:none}
+
+.count-line{font-size:12.5px;color:var(--ink3);margin:0 0 14px}
+.grid{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:660px){.grid{grid-template-columns:1fr 1fr}}
+.card{display:flex;gap:16px;background:var(--surface);border:1px solid var(--hair);
+  border-radius:var(--r);padding:16px;text-align:left;width:100%;align-items:stretch;
+  transition:border-color .15s,transform .15s}
+.card:hover{border-color:var(--accent);transform:translateY(-1px)}
+.bottle-wrap{flex:none;width:58px;border-radius:var(--rs);background:var(--sunken);
+  display:flex;align-items:flex-end;justify-content:center;padding:8px 0 0}
+.bottle-wrap svg{display:block;width:26px;height:auto}
+.card .info{flex:1;min-width:0;display:flex;flex-direction:column}
+.card .region{font-size:10.5px;letter-spacing:.14em;color:var(--ink3);font-weight:700;margin-bottom:3px}
+.card .name{font-size:15px;font-weight:700;line-height:1.35}
+.card .name-en{font-size:12.5px;color:var(--ink3);font-style:italic;margin-top:1px}
+.card .meta{display:flex;align-items:baseline;gap:7px;margin-top:auto;padding-top:12px;font-size:12.5px;color:var(--ink2);flex-wrap:wrap}
+.card .sc{font-size:16px;color:var(--gold)}
+.card .sc small{font-size:10px;letter-spacing:.08em;color:var(--ink3);margin-left:2px}
+.dot{color:var(--line)}
+.st-now{color:var(--ok);font-weight:600}.st-hold{color:var(--warn);font-weight:600}.st-peak{color:var(--accent);font-weight:600}
+.card .price{margin-left:auto;text-align:right;flex:none}
+.card .price .v{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
+.card .price small{display:block;font-size:10.5px;color:var(--ink3)}
+
+/* ═══════ detail ═══════ */
+.backbar{display:inline-flex;align-items:center;gap:6px;margin:26px 0 4px;color:var(--ink3);font-size:13.5px}
+.backbar:hover{color:var(--ink)}
+.d-head{display:flex;gap:26px;align-items:stretch;margin-top:14px}
+.d-bottle{flex:none;width:104px;border-radius:var(--r);background:var(--sunken);
+  display:flex;align-items:flex-end;justify-content:center;padding-top:16px}
+.d-bottle svg{width:46px;height:auto;display:block}
+.d-title{align-self:center}
+.d-title .region{font-size:11px;letter-spacing:.2em;color:var(--gold);font-weight:700}
+.d-title h2{margin:6px 0 3px;font-size:clamp(24px,4vw,31px);font-weight:400;line-height:1.25;letter-spacing:-.01em;text-wrap:balance}
+.d-title .en{font-size:15px;color:var(--ink3);font-style:italic}
+.d-stats{display:flex;gap:22px;margin-top:14px;flex-wrap:wrap;align-items:baseline}
+.d-stat .n{font-size:22px;color:var(--gold)}
+.d-stat .n em{font-style:normal;font-size:11px;letter-spacing:.08em;color:var(--ink3);margin-left:3px}
+.d-stat .k{font-size:11px;color:var(--ink3);letter-spacing:.06em}
+.d-price .n{color:var(--ink);font-variant-numeric:tabular-nums}
+.d-desc{color:var(--ink2);font-size:14.5px;margin:20px 0 0;max-width:64ch}
+
+.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--hair);border:1px solid var(--hair);border-radius:var(--r);overflow:hidden;margin-top:24px}
+@media(max-width:560px){.facts{grid-template-columns:1fr 1fr}}
+.fact{background:var(--surface);padding:13px 16px}
+.fact .k{font-size:10.5px;letter-spacing:.12em;color:var(--ink3);font-weight:700}
+.fact .v{font-size:13.5px;font-weight:600;margin-top:2px}
+
+.sect{margin-top:40px}
+.sect>.sh{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
+.sect>.sh h3{margin:0;font-size:11px;letter-spacing:.22em;color:var(--ink3);font-weight:700}
+.sect>.sh .rule{flex:1;height:1px;background:var(--hair)}
+.sect>.sub{font-size:13px;color:var(--ink2);margin:0 0 14px}
+.panel{background:var(--surface);border:1px solid var(--hair);border-radius:var(--r);padding:20px 22px}
+
+.crit-row{display:flex}
+.crit{flex:1;text-align:center;padding:6px 8px}
+.crit+.crit{border-left:1px solid var(--hair)}
+.crit .n{font-size:38px;line-height:1.05;color:var(--ink)}
+.crit .src{font-size:10.5px;letter-spacing:.14em;color:var(--gold);font-weight:800;margin-top:5px}
+.crit .cap{font-size:11.5px;color:var(--ink3)}
+
+.drink-strip{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.drink-bar{flex:1;min-width:220px;height:6px;border-radius:99px;position:relative;
+  background:linear-gradient(90deg,var(--warn) 0 30%,var(--ok) 30% 72%,var(--line) 72% 100%);opacity:.9}
+.drink-dot{position:absolute;top:50%;transform:translate(-50%,-50%);width:15px;height:15px;border-radius:50%;
+  background:var(--ink);border:3px solid var(--surface);box-shadow:0 0 0 1px var(--line)}
+.drink-lab{display:flex;justify-content:space-between;font-size:11px;color:var(--ink3);margin-top:8px}
+
+.aroma-chips{display:flex;flex-wrap:wrap;gap:8px}
+.aroma-chips span{font-size:13px;background:var(--sunken);border-radius:999px;padding:6px 15px;color:var(--ink2)}
+.pf-row{display:grid;grid-template-columns:44px 1fr 84px;gap:12px;align-items:center;margin-top:12px;font-size:13px}
+.pf-row .k{font-weight:700}
+.pf-track{height:4px;border-radius:99px;background:var(--sunken);position:relative}
+.pf-fill{position:absolute;inset:0 auto 0 0;border-radius:99px;background:var(--accent)}
+.pf-row .vv{color:var(--ink3);text-align:right;font-size:12px}
+
+.vin-wrap{overflow-x:auto}
+svg.chart{display:block;width:100%;height:auto}
+.legend{display:flex;gap:18px;font-size:12px;color:var(--ink3);margin-top:10px;flex-wrap:wrap}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px}
+
+.avg-line{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.avg-line .big{font-size:30px;font-variant-numeric:tabular-nums}
+.avg-line .rng{font-size:12.5px;color:var(--ink3)}
+.price-table{width:100%;border-collapse:collapse;font-size:14px}
+.price-table td{padding:11px 0;border-top:1px solid var(--hair);vertical-align:middle}
+.price-table .v{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+.price-table .ship{font-size:12px;color:var(--ink3)}
+.alert-row{display:flex;align-items:center;gap:12px;margin-top:16px;padding-top:16px;border-top:1px dashed var(--line)}
+.alert-row .t{font-size:14px;font-weight:700}
+.alert-row .d{font-size:12.5px;color:var(--ink2)}
+.switch{margin-left:auto;flex:none;width:44px;height:25px;border-radius:99px;background:var(--line);position:relative;transition:background .2s}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s}
+.switch[aria-checked="true"]{background:var(--accent)}
+.switch[aria-checked="true"]::after{left:22px}
+
+/* community reviews */
+.rv-sum{display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
+.rv-sum .big{font-size:30px}
+.rv-sum .stars{color:var(--gold);letter-spacing:1px}
+.rv-sum .cnt{font-size:12.5px;color:var(--ink3)}
+.rv{padding:16px 0;border-top:1px solid var(--hair)}
+.rv:first-of-type{border-top:none}
+.rv-top{display:flex;align-items:center;gap:10px}
+.rv-top .avatar{width:30px;height:30px;font-size:12px}
+.rv-top .u{font-weight:700;font-size:13.5px}
+.rv-top .mine{font-size:10.5px;color:var(--accent);border:1px solid var(--accent);border-radius:99px;padding:1px 8px;font-weight:700}
+.rv-top .st{color:var(--gold);font-size:12.5px;letter-spacing:1px}
+.rv-top .dt{margin-left:auto;font-size:11.5px;color:var(--ink3);font-variant-numeric:tabular-nums}
+.rv-txt{font-size:14px;margin:8px 0 0;color:var(--ink)}
+.rv-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.rv-tags span{font-size:11.5px;background:var(--sunken);border-radius:999px;padding:3px 10px;color:var(--ink2)}
+.rv-meta{font-size:12px;color:var(--ink3);margin-top:8px}
+.rv-photos{display:flex;gap:8px;margin-top:10px}
+.rv-photos img{width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--hair)}
+.rv-like{font-size:12px;color:var(--ink3);margin-top:8px}
+.rv-empty{color:var(--ink3);font-size:13.5px;padding:14px 0;border-top:1px solid var(--hair)}
+
+.cta-note{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:15px;font-size:15px;font-weight:700;
+  margin-top:30px;transition:opacity .15s}
+.cta-note:hover{opacity:.9}
+
+/* ═══════ compose ═══════ */
+.f-label{font-size:11px;letter-spacing:.18em;color:var(--ink3);font-weight:700;margin:24px 0 10px}
+.f-label:first-child{margin-top:0}
+select.wine-pick{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:var(--rs);padding:12px 14px;outline:none}
+.stars-in{display:flex;align-items:center;gap:14px}
+.stars-in input[type=range]{flex:1;accent-color:var(--accent)}
+.stars-in .disp{font-size:21px;letter-spacing:2px;color:var(--gold);white-space:nowrap}
+.stars-in .num{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;min-width:2.2em}
+.slider-row{display:grid;grid-template-columns:48px 1fr 84px;align-items:center;gap:12px;margin-bottom:10px}
+.slider-row .k{font-size:13.5px;font-weight:700}
+.slider-row input{accent-color:var(--accent);width:100%}
+.slider-row .vv{font-size:12px;color:var(--ink2);text-align:right}
+.tagbox{display:flex;flex-wrap:wrap;gap:8px}
+.tag{padding:6px 14px;border:1px solid var(--line);border-radius:999px;font-size:13px;color:var(--ink2);background:var(--surface);transition:all .12s}
+.tag[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+textarea.note{width:100%;min-height:110px;background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--rs);padding:14px 16px;resize:vertical;outline:none;line-height:1.7}
+textarea.note:focus{border-color:var(--accent)}
+.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:520px){.meta-grid{grid-template-columns:1fr}}
+.meta-grid input{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:var(--rs);padding:11px 14px;outline:none}
+.meta-grid input:focus{border-color:var(--accent)}
+.photo-add{display:flex;align-items:center;justify-content:center;gap:8px;border:1.5px dashed var(--line);
+  border-radius:var(--rs);padding:20px;color:var(--ink2);font-size:13.5px;width:100%;transition:border-color .15s}
+.photo-add:hover{border-color:var(--accent);color:var(--accent)}
+.photo-strip{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+.photo-strip img{width:74px;height:74px;object-fit:cover;border-radius:10px;border:1px solid var(--hair)}
+.save-row{display:flex;gap:10px;margin-top:30px}
+.btn-ghost{flex:1;border:1px solid var(--line);border-radius:999px;padding:14px;font-weight:600;color:var(--ink2)}
+.btn-ghost:hover{border-color:var(--ink3)}
+.btn-primary{flex:2;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:14px;font-weight:700;font-size:15px}
+.btn-primary:hover{opacity:.9}
+
+/* ═══════ my cellar ═══════ */
+.mc-head{display:flex;align-items:center;gap:16px;margin:40px 0 8px}
+.mc-head .avatar{width:52px;height:52px;font-size:20px}
+.mc-head h1{margin:0;font-size:24px;font-weight:400}
+.mc-head .em{font-size:12.5px;color:var(--ink3)}
+.mc-head .out{margin-left:auto;font-size:12.5px;color:var(--ink3);border-bottom:1px dotted var(--ink3)}
+.mc-head .out:hover{color:var(--accent);border-color:var(--accent)}
+.mc-stats{display:flex;gap:1px;background:var(--hair);border:1px solid var(--hair);border-radius:var(--r);overflow:hidden;margin:20px 0 8px}
+.mc-stat{flex:1;background:var(--surface);text-align:center;padding:16px 8px}
+.mc-stat .n{font-size:26px;color:var(--ink)}
+.mc-stat .k{font-size:11px;color:var(--ink3);letter-spacing:.08em}
+.mc-cta{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:1px solid var(--line);
+  border-radius:999px;padding:13px;font-weight:700;font-size:14px;color:var(--accent);margin:14px 0 6px;transition:all .15s}
+.mc-cta:hover{border-color:var(--accent);background:var(--accent-soft)}
+.j-empty{text-align:center;color:var(--ink3);padding:56px 20px;font-size:14px;line-height:1.8}
+.alert-mini{display:flex;align-items:center;gap:10px;padding:11px 0;border-top:1px solid var(--hair);font-size:13.5px}
+.alert-mini:first-of-type{border-top:none}
+.alert-mini .p{margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums}
+
+/* ═══════ auth modal ═══════ */
+.overlay{position:fixed;inset:0;background:rgba(12,8,10,.5);backdrop-filter:blur(3px);z-index:80;
+  display:flex;align-items:center;justify-content:center;padding:24px}
+.modal{width:100%;max-width:390px;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:30px 28px}
+.modal .caps{color:var(--gold)}
+.modal h2{margin:6px 0 4px;font-size:22px;font-weight:400}
+.modal .d{font-size:13.5px;color:var(--ink2);margin:0 0 20px}
+.modal label{display:block;font-size:12px;font-weight:700;color:var(--ink2);margin:14px 0 6px}
+.modal input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:var(--rs);padding:12px 14px;outline:none}
+.modal input:focus{border-color:var(--accent)}
+.modal .btn-primary{width:100%;margin-top:22px;flex:none}
+.modal .skip{display:block;margin:14px auto 0;font-size:12.5px;color:var(--ink3)}
+.modal .skip:hover{color:var(--ink)}
+.auth-tabs{display:flex;gap:5px;margin:16px 0 4px;background:var(--sunken);border-radius:999px;padding:4px}
+.auth-tabs button{flex:1;padding:8px;border-radius:999px;font-size:13.5px;color:var(--ink3);font-weight:600;transition:all .15s}
+.auth-tabs button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.auth-msg{font-size:12.5px;color:var(--ink3);margin:14px 2px 0;line-height:1.6}
+.auth-msg.err{color:#C4453A}
+a.ai-pick{text-decoration:none;color:inherit}
+
+.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,90px);background:var(--ink);color:var(--bg);
+  padding:12px 24px;border-radius:999px;font-size:14px;font-weight:600;transition:transform .3s cubic-bezier(.2,.8,.2,1);z-index:99;pointer-events:none}
+.toast.on{transform:translate(-50%,0)}
+.hidden{display:none!important}
+footer.app{margin-top:64px;padding-top:22px;border-top:1px solid var(--hair);font-size:12px;color:var(--ink3);line-height:1.8}
+</style>
+
+<!-- shared bottle gradients -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="g-red" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--glass-red1)"/><stop offset="1" stop-color="var(--glass-red2)"/></linearGradient>
+  <linearGradient id="g-white" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--glass-wht1)"/><stop offset="1" stop-color="var(--glass-wht2)"/></linearGradient>
+  <linearGradient id="g-spark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--glass-spk1)"/><stop offset="1" stop-color="var(--glass-spk2)"/></linearGradient>
+  <linearGradient id="g-sweet" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--glass-swt1)"/><stop offset="1" stop-color="var(--glass-swt2)"/></linearGradient>
+</defs></svg>
+
+<header class="app"><div class="app-inner">
+  <div class="brand"><span class="mark serif">CAVE</span><span class="sub">WINE INTELLIGENCE</span></div>
+  <nav class="tabs" aria-label="주 메뉴">
+    <button id="tab-explore" aria-current="true" onclick="go('explore')">탐색</button>
+    <button id="tab-cellar" aria-current="false" onclick="go('cellar')">마이 셀러</button>
+  </nav>
+  <div class="user-slot" id="user-slot"></div>
+</div></header>
+
+<div class="shell">
+<main id="view-explore">
+  <div class="hero">
+    <p class="caps">CURATED SELECTION</p>
+    <h1>오늘 밤, 어떤 <b>한 병</b>을<br>열어볼까요</h1>
+    <p>평론가 점수·빈티지 작황·국내 평균가·애호가들의 후기까지, 한 화면에서.</p>
+  </div>
+
+  <div class="searchbar">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="q" type="search" placeholder="와인·지역·품종, 또는 자연어로 질문" autocomplete="off">
+    <button class="ai-btn" onclick="runAI()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+      AI 소믈리에
+    </button>
+  </div>
+  <p class="search-hint">이렇게 물어보세요 —
+    <button onclick="tryQ('스테이크에 어울리는 15만원 이하 레드')">스테이크에 어울리는 15만원 이하 레드</button> ·
+    <button onclick="tryQ('선물용 샴페인')">선물용 샴페인</button> ·
+    <button onclick="tryQ('매운 한식이랑 마실 와인')">매운 한식이랑 마실 와인</button>
+  </p>
+
+  <div id="ai-out"></div>
+
+  <div class="toolbar">
+    <div class="chips" id="chips" role="group" aria-label="필터"></div>
+    <select class="sort" id="sort" onchange="renderGrid()" aria-label="정렬">
+      <option value="rec">추천순</option>
+      <option value="priceAsc">가격 낮은순</option>
+      <option value="priceDesc">가격 높은순</option>
+      <option value="score">평점 높은순</option>
+    </select>
+  </div>
+  <p class="count-line" id="count-line"></p>
+  <div class="grid" id="grid"></div>
+</main>
+
+<main id="view-detail" class="hidden"></main>
+<main id="view-compose" class="hidden"></main>
+<main id="view-cellar" class="hidden"></main>
+
+<footer class="app">
+  CAVE — 평론가 점수는 Robert Parker Wine Advocate·Wine Spectator·James Suckling 공표 기준, 평균가는 국내 주요 판매처 표본가의 산술평균이며 주기적으로 갱신됩니다.
+  빈티지 차트는 산지별 작황 지수 기준입니다.<br>
+  config.js에 Gemini API 키를 연결하면 전 세계 와인 검색이, Firebase를 연결하면 실계정(이메일 인증)과 사용자 간 후기 공유가 활성화됩니다.
+</footer>
+</div>
+
+<div id="auth-root"></div>
+<div class="toast" id="toast">저장되었습니다</div>
+
+<script src="config.js"></script>
+<script>
+/* config.js가 없거나 비어 있으면 게스트/내장 엔진 모드로 동작 */
+const CFG=window.CAVE_CONFIG||{};
+
+/* ═══════════ 산지별 빈티지 작황 지수 ═══════════ */
+const VIN={
+bordeaux:{2012:89,2013:82,2014:90,2015:96,2016:97,2017:90,2018:96,2019:96,2020:96,2021:88},
+burgred:{2012:93,2013:88,2014:91,2015:96,2016:92,2017:93,2018:94,2019:96,2020:95,2021:87},
+burgwhite:{2012:91,2013:89,2014:95,2015:91,2016:90,2017:94,2018:92,2019:93,2020:95,2021:89},
+tuscany:{2012:92,2013:91,2014:87,2015:96,2016:98,2017:90,2018:93,2019:95,2020:93,2021:94},
+piedmont:{2012:91,2013:94,2014:89,2015:93,2016:97,2017:92,2018:91,2019:95,2020:93,2021:95},
+napa:{2012:96,2013:97,2014:95,2015:93,2016:97,2017:92,2018:97,2019:95,2020:85,2021:95},
+rhone:{2012:93,2013:90,2014:89,2015:96,2016:98,2017:94,2018:93,2019:96,2020:93,2021:90},
+spain:{2012:93,2013:88,2014:92,2015:95,2016:94,2017:90,2018:93,2019:95,2020:94,2021:93},
+australia:{2012:96,2013:93,2014:92,2015:95,2016:95,2017:93,2018:96,2019:93,2020:94,2021:95},
+germany:{2012:92,2013:89,2014:91,2015:94,2016:92,2017:93,2018:94,2019:96,2020:93,2021:94},
+champagne:{2008:98,2009:94,2012:97,2013:94,2015:93,2018:95,2019:94,2020:93},
+marlborough:{2018:92,2019:93,2020:94,2021:95,2022:90,2023:93},
+chile:{2015:94,2016:92,2017:93,2018:95,2019:93,2020:94,2021:95,2022:93},
+argentina:{2015:93,2016:92,2017:94,2018:95,2019:96,2020:94,2021:95,2022:93},
+oregon:{2014:94,2015:95,2016:94,2017:92,2018:93,2019:92,2020:88,2021:94,2022:93},
+sauternes:{2013:93,2014:92,2015:95,2016:95,2017:94,2018:90,2019:93,2020:92,2021:90},
+loire:{2016:91,2017:92,2018:94,2019:93,2020:94,2021:90,2022:93}
+};
+const VIN_LABEL={bordeaux:"보르도",burgred:"부르고뉴 (레드)",burgwhite:"부르고뉴 (화이트)",tuscany:"토스카나",piedmont:"피에몬테",napa:"나파 밸리",rhone:"북부 론",spain:"스페인 북부",australia:"사우스 오스트레일리아",germany:"모젤",champagne:"샹파뉴",marlborough:"말버러",chile:"칠레 센트럴 밸리",argentina:"멘도사",oregon:"오리건",sauternes:"소테른",loire:"루아르"};
+
+/* ═══════════ 와인 데이터 (24종) ═══════════ */
+const W=(o)=>o;
+const WINES=[
+W({id:"margaux",ko:"샤토 마르고 2015",en:"Château Margaux",vintage:2015,region:"보르도 · 마르고",country:"프랑스",type:"레드",grape:"카베르네 소비뇽 블렌드",cls:"g-red",abv:"13.5%",serve:"16–18℃",decant:"2시간",vinKey:"bordeaux",
+ scores:{RP:99,WS:98,JS:100},drink:{status:"hold",label:"2025–2060",pos:.22,txt:"지금도 훌륭하지만 정점은 2030년 이후"},
+ sellers:[["신세계L&B",1890000,"무료배송"],["와인앤모어",1950000,"매장 픽업"],["데일리샷",1842000,"매장 픽업"],["롯데백화점",2050000,"무료배송"]],
+ aromas:["제비꽃","블랙커런트","삼나무","흑연"],pairing:["샤토브리앙","양갈비","숙성 콩테 치즈"],profile:{body:5,tannin:4,acid:4,sweet:1},
+ desc:"마르고 마을의 1등급 그랑 크뤼. 2015는 벨벳 같은 탄닌과 향수 같은 아로마가 완벽한 균형을 이루는 세기의 빈티지로 평가됩니다."}),
+W({id:"talbot",ko:"샤토 탈보 2018",en:"Château Talbot",vintage:2018,region:"보르도 · 생쥘리앙",country:"프랑스",type:"레드",grape:"카베르네 소비뇽 · 메를로",cls:"g-red",abv:"14%",serve:"16–18℃",decant:"1시간",vinKey:"bordeaux",
+ scores:{RP:93,WS:92,JS:94},drink:{status:"peak",label:"2024–2040",pos:.38,txt:"지금부터 즐기기 좋은 구간"},
+ sellers:[["데일리샷",108000,"매장 픽업"],["와인앤모어",112000,"매장 픽업"],["신세계L&B",115000,"무료배송"],["트레이더스",99800,"매장 구매"]],
+ aromas:["카시스","담뱃잎","시더","다크초콜릿"],pairing:["등심 스테이크","버섯 리조또","하몽"],profile:{body:4,tannin:4,acid:3,sweet:1},
+ desc:"한국인이 가장 사랑하는 생쥘리앙 4등급. 클래식한 구조감과 너그러운 과실미의 균형이 뛰어나 실패 없는 선택지로 꼽힙니다."}),
+W({id:"jadot",ko:"루이 자도 즈브레 샹베르탱 2019",en:"Louis Jadot Gevrey-Chambertin",vintage:2019,region:"부르고뉴 · 즈브레 샹베르탱",country:"프랑스",type:"레드",grape:"피노 누아",cls:"g-red",abv:"13.5%",serve:"14–16℃",decant:"30분",vinKey:"burgred",
+ scores:{RP:92,WS:91,JS:93},drink:{status:"peak",label:"2024–2038",pos:.35,txt:"과실미가 살아있는 지금이 매력적"},
+ sellers:[["와인앤모어",125000,"매장 픽업"],["신세계L&B",132000,"무료배송"],["데일리샷",119000,"매장 픽업"]],
+ aromas:["체리","장미","흙내음","정향"],pairing:["오리 콩피","버섯 요리","연어 스테이크"],profile:{body:3,tannin:3,acid:4,sweet:1},
+ desc:"부르고뉴 대표 네고시앙의 마을급 즈브레. 붉은 과실과 은은한 흙내음, 피노 누아의 우아함을 합리적으로 경험하게 합니다."}),
+W({id:"guigal",ko:"이 기갈 코트 로티 브륀 에 블롱드 2019",en:"E. Guigal Côte-Rôtie Brune et Blonde",vintage:2019,region:"북부 론 · 코트 로티",country:"프랑스",type:"레드",grape:"시라 · 비오니에",cls:"g-red",abv:"14%",serve:"16–18℃",decant:"1시간",vinKey:"rhone",
+ scores:{RP:94,WS:93,JS:95},drink:{status:"peak",label:"2024–2042",pos:.3,txt:"향신료와 과실의 균형이 무르익는 중"},
+ sellers:[["신세계L&B",138000,"무료배송"],["와인앤모어",142000,"매장 픽업"],["데일리샷",133000,"매장 픽업"]],
+ aromas:["블랙베리","후추","베이컨","제비꽃"],pairing:["숯불 바베큐","양고기","순대·곱창"],profile:{body:4,tannin:4,acid:4,sweet:1},
+ desc:"코트 로티의 기준. 시라에 소량의 비오니에를 더해 야성적 향신료와 꽃향의 관능적인 대비를 만들어냅니다."}),
+W({id:"sassicaia",ko:"사시카이아 2019",en:"Sassicaia",vintage:2019,region:"토스카나 · 볼게리",country:"이탈리아",type:"레드",grape:"카베르네 소비뇽 · 카베르네 프랑",cls:"g-red",abv:"14%",serve:"16–18℃",decant:"2시간",vinKey:"tuscany",
+ scores:{RP:97,WS:96,JS:97},drink:{status:"hold",label:"2026–2049",pos:.18,txt:"영빈티지 — 5년 이상 셀러링 권장"},
+ sellers:[["와인앤모어",418000,"매장 픽업"],["데일리샷",425000,"매장 픽업"],["신세계L&B",439000,"무료배송"],["트레이더스",459000,"매장 구매"]],
+ aromas:["카시스","지중해 허브","흑연","삼나무"],pairing:["비스테카","트러플 파스타","페코리노"],profile:{body:4,tannin:4,acid:4,sweet:1},
+ desc:"수퍼 투스칸의 원조. 지중해 허브와 카시스, 흑연의 미네랄이 긴 여운으로 이어지는 이탈리아의 아이콘입니다."}),
+W({id:"banfi",ko:"반피 브루넬로 디 몬탈치노 2018",en:"Banfi Brunello di Montalcino",vintage:2018,region:"토스카나 · 몬탈치노",country:"이탈리아",type:"레드",grape:"산지오베제",cls:"g-red",abv:"14.5%",serve:"16–18℃",decant:"1시간",vinKey:"tuscany",
+ scores:{RP:93,WS:92,JS:94},drink:{status:"peak",label:"2024–2038",pos:.32,txt:"체리와 가죽 향이 무르익는 구간"},
+ sellers:[["데일리샷",92000,"매장 픽업"],["와인앤모어",96000,"매장 픽업"],["신세계L&B",99000,"무료배송"]],
+ aromas:["체리","가죽","발사믹","말린 허브"],pairing:["라구 파스타","살라미","숙성 치즈"],profile:{body:4,tannin:4,acid:4,sweet:1},
+ desc:"산지오베제의 정점 브루넬로를 합리적 가격으로. 체리의 산미와 가죽·발사믹의 숙성 뉘앙스가 조화롭습니다."}),
+W({id:"fontodi",ko:"폰토디 키안티 클라시코 2020",en:"Fontodi Chianti Classico",vintage:2020,region:"토스카나 · 키안티 클라시코",country:"이탈리아",type:"레드",grape:"산지오베제",cls:"g-red",abv:"14%",serve:"15–17℃",decant:"30분",vinKey:"tuscany",
+ scores:{RP:94,WS:93,JS:94},drink:{status:"now",label:"2023–2033",pos:.42,txt:"지금 마시기 좋음 — 토마토 요리와 최상"},
+ sellers:[["와인앤모어",68000,"매장 픽업"],["데일리샷",71000,"매장 픽업"],["신세계L&B",75000,"무료배송"]],
+ aromas:["붉은 체리","제비꽃","오렌지 필","허브"],pairing:["마르게리타 피자","토마토 파스타","프로슈토"],profile:{body:3,tannin:3,acid:5,sweet:1},
+ desc:"유기농법 키안티의 교과서. 싱그러운 체리 산미가 토마토 베이스 요리와 만났을 때 진가를 발휘합니다."}),
+W({id:"gaja",ko:"가야 바르바레스코 2019",en:"Gaja Barbaresco",vintage:2019,region:"피에몬테 · 바르바레스코",country:"이탈리아",type:"레드",grape:"네비올로",cls:"g-red",abv:"14%",serve:"16–18℃",decant:"2시간",vinKey:"piedmont",
+ scores:{RP:95,WS:94,JS:96},drink:{status:"hold",label:"2027–2045",pos:.2,txt:"네비올로의 진가는 인내 후에"},
+ sellers:[["신세계L&B",315000,"무료배송"],["와인앤모어",325000,"매장 픽업"],["롯데백화점",340000,"무료배송"]],
+ aromas:["장미","타르","체리","감초"],pairing:["트러플 요리","브라사토","숙성 파르미지아노"],profile:{body:4,tannin:5,acid:4,sweet:1},
+ desc:"이탈리아 와인의 혁명가 가야. 장미와 타르로 요약되는 네비올로의 귀족적 아로마를 가장 세련되게 담아냅니다."}),
+W({id:"opusone",ko:"오퍼스 원 2018",en:"Opus One",vintage:2018,region:"캘리포니아 · 나파 밸리",country:"미국",type:"레드",grape:"카베르네 소비뇽 블렌드",cls:"g-red",abv:"14.5%",serve:"16–18℃",decant:"1시간",vinKey:"napa",
+ scores:{RP:97,WS:95,JS:98},drink:{status:"peak",label:"2024–2040",pos:.45,txt:"지금 마시기 좋은 정점 구간 진입"},
+ sellers:[["신세계L&B",548000,"무료배송"],["데일리샷",555000,"매장 픽업"],["롯데백화점",585000,"무료배송"],["와인앤모어",590000,"매장 픽업"]],
+ aromas:["블랙베리","모카","바닐라","민트"],pairing:["립아이 스테이크","숯불 갈비","다크초콜릿"],profile:{body:5,tannin:4,acid:3,sweet:1},
+ desc:"무통 로칠드와 로버트 몬다비의 합작. 농익은 과실과 실크 같은 질감, 나파의 화려함과 보르도의 절제가 공존합니다."}),
+W({id:"caymus",ko:"케이머스 카베르네 소비뇽 2021",en:"Caymus Cabernet Sauvignon",vintage:2021,region:"캘리포니아 · 나파 밸리",country:"미국",type:"레드",grape:"카베르네 소비뇽",cls:"g-red",abv:"14.6%",serve:"16–18℃",decant:"불필요",vinKey:"napa",
+ scores:{RP:91,WS:90,JS:93},drink:{status:"now",label:"2023–2033",pos:.4,txt:"부드러운 스타일 — 바로 즐기기 좋음"},
+ sellers:[["트레이더스",118000,"매장 구매"],["데일리샷",125000,"매장 픽업"],["와인앤모어",129000,"매장 픽업"],["신세계L&B",135000,"무료배송"]],
+ aromas:["잘 익은 블랙베리","코코아","바닐라","오크"],pairing:["LA갈비","햄버거","BBQ 폭립"],profile:{body:5,tannin:3,acid:2,sweet:2},
+ desc:"부드럽고 달콤한 과실미의 대명사. 탄닌이 순해 카베르네 입문자와 모임 자리에서 가장 사랑받는 나파 레드입니다."}),
+W({id:"cristom",ko:"크리스톰 마운트 제퍼슨 피노 누아 2021",en:"Cristom Mt. Jefferson Cuvée Pinot Noir",vintage:2021,region:"오리건 · 윌라메트 밸리",country:"미국",type:"레드",grape:"피노 누아",cls:"g-red",abv:"13.5%",serve:"14–16℃",decant:"30분",vinKey:"oregon",
+ scores:{RP:93,WS:91,JS:94},drink:{status:"now",label:"2023–2032",pos:.4,txt:"신선한 과실미가 매력적인 지금"},
+ sellers:[["데일리샷",84000,"매장 픽업"],["와인앤모어",88000,"매장 픽업"],["신세계L&B",92000,"무료배송"]],
+ aromas:["라즈베리","석류","숲바닥","시나몬"],pairing:["삼겹살 구이","연어","버섯 파스타"],profile:{body:3,tannin:2,acid:4,sweet:1},
+ desc:"오리건 피노의 모범답안. 붉은 과실의 순수함과 은근한 스파이스가 한식 상차림과도 놀랍도록 잘 어울립니다."}),
+W({id:"grange",ko:"펜폴즈 그레인지 2017",en:"Penfolds Grange",vintage:2017,region:"사우스 오스트레일리아",country:"호주",type:"레드",grape:"쉬라즈",cls:"g-red",abv:"14.5%",serve:"16–18℃",decant:"2시간",vinKey:"australia",
+ scores:{RP:98,WS:96,JS:99},drink:{status:"hold",label:"2027–2055",pos:.15,txt:"장기 숙성형 — 2027년 이후 개봉 권장"},
+ sellers:[["롯데백화점",935000,"무료배송"],["신세계L&B",950000,"무료배송"],["와인앤모어",980000,"매장 픽업"]],
+ aromas:["블랙베리 잼","감초","유칼립투스","다크초콜릿"],pairing:["드라이에이징 스테이크","양갈비","블루치즈"],profile:{body:5,tannin:5,acid:3,sweet:1},
+ desc:"호주 와인의 자존심. 검은 과실의 응축미와 수십 년을 견디는 구조감이 남반구 최고의 컬트를 만들었습니다."}),
+W({id:"unico",ko:"베가 시실리아 우니코 2011",en:"Vega Sicilia Único",vintage:2011,region:"리베라 델 두에로",country:"스페인",type:"레드",grape:"템프라니요 · 카베르네 소비뇽",cls:"g-red",abv:"14%",serve:"16–18℃",decant:"1시간",vinKey:"spain",
+ scores:{RP:98,WS:97,JS:97},drink:{status:"peak",label:"2023–2045",pos:.38,txt:"10년 숙성 후 출시 — 지금부터 정점"},
+ sellers:[["와인앤모어",765000,"매장 픽업"],["신세계L&B",780000,"무료배송"],["데일리샷",798000,"매장 픽업"]],
+ aromas:["발사믹","가죽","담뱃잎","말린 자두"],pairing:["이베리코 목살","양 정강이 찜","만체고"],profile:{body:4,tannin:4,acid:4,sweet:1},
+ desc:"스페인의 전설. 오크 대숙성이 빚은 복합미가 압도적인 우아함으로 피어나는, 시간이 만든 와인입니다."}),
+W({id:"rioja904",ko:"라 리오하 알타 그란 레세르바 904 2015",en:"La Rioja Alta Gran Reserva 904",vintage:2015,region:"리오하",country:"스페인",type:"레드",grape:"템프라니요 · 그라시아노",cls:"g-red",abv:"14%",serve:"16–17℃",decant:"30분",vinKey:"spain",
+ scores:{RP:96,WS:95,JS:95},drink:{status:"peak",label:"2023–2040",pos:.36,txt:"완숙한 숙성미 — 바로 즐기기 좋음"},
+ sellers:[["데일리샷",99000,"매장 픽업"],["와인앤모어",105000,"매장 픽업"],["신세계L&B",112000,"무료배송"]],
+ aromas:["말린 체리","바닐라","코코넛","담배"],pairing:["하몽 이베리코","양갈비","버섯 요리"],profile:{body:3,tannin:3,acid:4,sweet:1},
+ desc:"전통 리오하 숙성의 정수. 10년의 기다림이 만든 부드러운 질감과 복합미를 10만원대에 만나는 최고의 가치입니다."}),
+W({id:"catena",ko:"카테나 자파타 말벡 아르헨티노 2020",en:"Catena Zapata Malbec Argentino",vintage:2020,region:"멘도사",country:"아르헨티나",type:"레드",grape:"말벡",cls:"g-red",abv:"14%",serve:"16–18℃",decant:"1시간",vinKey:"argentina",
+ scores:{RP:97,WS:94,JS:97},drink:{status:"peak",label:"2024–2040",pos:.3,txt:"고도가 빚은 과실미의 절정"},
+ sellers:[["와인앤모어",145000,"매장 픽업"],["신세계L&B",152000,"무료배송"],["데일리샷",139000,"매장 픽업"]],
+ aromas:["블랙베리","제비꽃","코코아","흑연"],pairing:["아사도","채끝 스테이크","훈제 요리"],profile:{body:4,tannin:4,acid:3,sweet:1},
+ desc:"고산지대 말벡의 세계적 기준. 파워와 우아함을 동시에 갖춰 아르헨티나 와인의 위상을 바꾼 주역입니다."}),
+W({id:"montes",ko:"몬테스 알파 카베르네 소비뇽 2021",en:"Montes Alpha Cabernet Sauvignon",vintage:2021,region:"콜차구아 밸리",country:"칠레",type:"레드",grape:"카베르네 소비뇽",cls:"g-red",abv:"14.5%",serve:"16–18℃",decant:"불필요",vinKey:"chile",
+ scores:{RP:90,WS:89,JS:91},drink:{status:"now",label:"2023–2030",pos:.45,txt:"데일리로 바로 즐기기 좋음"},
+ sellers:[["트레이더스",29800,"매장 구매"],["데일리샷",33000,"매장 픽업"],["와인앤모어",35000,"매장 픽업"],["신세계L&B",36500,"무료배송"]],
+ aromas:["블랙커런트","자두","바닐라","은은한 오크"],pairing:["불고기","치킨","제육볶음"],profile:{body:4,tannin:3,acid:3,sweet:1},
+ desc:"국민 와인이라 불리는 이유가 있습니다. 3만원대에서 이만한 균형과 완성도를 찾기는 쉽지 않습니다."}),
+W({id:"lesclos",ko:"윌리엄 페브르 샤블리 그랑 크뤼 레 클로 2020",en:"William Fèvre Chablis Grand Cru Les Clos",vintage:2020,region:"부르고뉴 · 샤블리",country:"프랑스",type:"화이트",grape:"샤르도네",cls:"g-white",abv:"13%",serve:"10–12℃",decant:"불필요",vinKey:"burgwhite",
+ scores:{RP:95,WS:94,JS:96},drink:{status:"now",label:"2023–2032",pos:.42,txt:"지금 마시기 좋음 — 굴과 최상의 궁합"},
+ sellers:[["데일리샷",142000,"매장 픽업"],["와인앤모어",148000,"매장 픽업"],["신세계L&B",155000,"무료배송"]],
+ aromas:["부싯돌","레몬 제스트","흰 꽃","굴 껍질"],pairing:["생굴","광어회","해산물 플래터"],profile:{body:3,tannin:1,acid:5,sweet:1},
+ desc:"샤블리 그랑 크뤼의 정수. 부싯돌 미네랄과 팽팽한 산도가 해산물과 만나는 순간을 위해 존재하는 와인입니다."}),
+W({id:"jolivet",ko:"파스칼 졸리베 상세르 2022",en:"Pascal Jolivet Sancerre",vintage:2022,region:"루아르 · 상세르",country:"프랑스",type:"화이트",grape:"소비뇽 블랑",cls:"g-white",abv:"13%",serve:"8–10℃",decant:"불필요",vinKey:"loire",
+ scores:{RP:91,WS:90,JS:92},drink:{status:"now",label:"2023–2027",pos:.5,txt:"신선함이 생명 — 지금이 최적"},
+ sellers:[["와인앤모어",56000,"매장 픽업"],["데일리샷",58000,"매장 픽업"],["신세계L&B",62000,"무료배송"]],
+ aromas:["구스베리","라임","젖은 돌","허브"],pairing:["염소 치즈","시저 샐러드","해산물 파스타"],profile:{body:2,tannin:1,acid:5,sweet:1},
+ desc:"루아르 소비뇽 블랑의 우아한 표현. 뉴질랜드보다 절제된 향과 미네랄 중심의 세련미가 돋보입니다."}),
+W({id:"loosen",ko:"닥터 루젠 리슬링 카비네트 2022",en:"Dr. Loosen Riesling Kabinett",vintage:2022,region:"모젤",country:"독일",type:"화이트",grape:"리슬링",cls:"g-white",abv:"8.5%",serve:"8–10℃",decant:"불필요",vinKey:"germany",
+ scores:{RP:92,WS:90,JS:93},drink:{status:"now",label:"2023–2035",pos:.3,txt:"지금도, 10년 후도 좋은 리슬링의 마법"},
+ sellers:[["데일리샷",45000,"매장 픽업"],["와인앤모어",47000,"매장 픽업"],["트레이더스",42800,"매장 구매"]],
+ aromas:["청사과","백도","라임","슬레이트"],pairing:["매운 한식","떡볶이","타이 커리"],profile:{body:2,tannin:1,acid:5,sweet:3},
+ desc:"은은한 단맛과 짜릿한 산미의 균형. 매운 음식과 마실 와인을 묻는다면 소믈리에들이 가장 먼저 꺼내는 답입니다."}),
+W({id:"montelena",ko:"샤토 몬텔레나 샤르도네 2021",en:"Chateau Montelena Chardonnay",vintage:2021,region:"캘리포니아 · 나파 밸리",country:"미국",type:"화이트",grape:"샤르도네",cls:"g-white",abv:"13.9%",serve:"10–12℃",decant:"불필요",vinKey:"napa",
+ scores:{RP:93,WS:92,JS:94},drink:{status:"now",label:"2023–2031",pos:.38,txt:"절제된 오크 — 지금부터 수년간 좋음"},
+ sellers:[["와인앤모어",95000,"매장 픽업"],["신세계L&B",99000,"무료배송"],["데일리샷",92000,"매장 픽업"]],
+ aromas:["사과","시트러스","흰 꽃","미네랄"],pairing:["버터 구이 랍스터","크림 파스타","치킨"],profile:{body:3,tannin:1,acid:4,sweet:1},
+ desc:"1976 파리의 심판에서 프랑스를 이긴 그 와이너리. 과하지 않은 오크와 순수한 과실의 클래식 스타일입니다."}),
+W({id:"cloudybay",ko:"클라우디 베이 소비뇽 블랑 2023",en:"Cloudy Bay Sauvignon Blanc",vintage:2023,region:"말버러",country:"뉴질랜드",type:"화이트",grape:"소비뇽 블랑",cls:"g-white",abv:"13%",serve:"8–10℃",decant:"불필요",vinKey:"marlborough",
+ scores:{RP:0,WS:90,JS:91},drink:{status:"now",label:"2024–2027",pos:.5,txt:"신선할 때 즐기는 스타일 — 지금이 최적"},
+ sellers:[["트레이더스",39800,"매장 구매"],["데일리샷",42900,"매장 픽업"],["와인앤모어",45000,"매장 픽업"],["신세계L&B",47500,"무료배송"]],
+ aromas:["패션프루트","라임","구스베리","허브"],pairing:["샐러드","초밥","염소 치즈"],profile:{body:2,tannin:1,acid:5,sweet:1},
+ desc:"뉴질랜드 소비뇽 블랑을 세계 지도에 올린 주인공. 폭발하는 열대 과실향의 싱그러운 데일리 화이트입니다."}),
+W({id:"domp",ko:"돔 페리뇽 2013",en:"Dom Pérignon",vintage:2013,region:"샹파뉴",country:"프랑스",type:"스파클링",grape:"샤르도네 · 피노 누아",cls:"g-spark",abv:"12.5%",serve:"8–10℃",decant:"불필요",vinKey:"champagne",
+ scores:{RP:96,WS:95,JS:97},drink:{status:"peak",label:"2023–2038",pos:.35,txt:"출시 직후부터 훌륭한 정점 구간"},
+ sellers:[["신세계L&B",285000,"무료배송"],["롯데백화점",289000,"무료배송"],["데일리샷",295000,"매장 픽업"],["와인앤모어",310000,"매장 픽업"]],
+ aromas:["브리오슈","백도","시트러스","구운 아몬드"],pairing:["캐비어","트러플 감자","축하의 순간"],profile:{body:3,tannin:1,acid:4,sweet:1},
+ desc:"빈티지 샴페인의 대명사. 2013의 긴장감 있는 산미와 브리오슈 아로마는 특별한 날을 위한 가장 확실한 선택입니다."}),
+W({id:"bollinger",ko:"볼랭저 스페셜 퀴베 브뤼 NV",en:"Bollinger Special Cuvée Brut",vintage:"NV",region:"샹파뉴",country:"프랑스",type:"스파클링",grape:"피노 누아 중심 블렌드",cls:"g-spark",abv:"12%",serve:"8–10℃",decant:"불필요",vinKey:"champagne",
+ scores:{RP:93,WS:92,JS:94},drink:{status:"now",label:"논빈티지 · 바로 즐김",pos:.5,txt:"구조감 있는 논빈티지의 표본"},
+ sellers:[["데일리샷",89000,"매장 픽업"],["와인앤모어",93000,"매장 픽업"],["신세계L&B",96000,"무료배송"]],
+ aromas:["구운 사과","브리오슈","헤이즐넛","스파이스"],pairing:["프라이드 치킨","굴","경양식 돈가스"],profile:{body:3,tannin:1,acid:4,sweet:1},
+ desc:"007의 샴페인. 피노 누아 중심의 단단한 구조감으로, 논빈티지 샴페인 중 가장 와인다운 샴페인으로 불립니다."}),
+W({id:"yquem",ko:"샤토 디켐 2015",en:"Château d'Yquem",vintage:2015,region:"보르도 · 소테른",country:"프랑스",type:"스위트",grape:"세미용 · 소비뇽 블랑",cls:"g-sweet",abv:"14%",serve:"8–10℃",decant:"불필요",vinKey:"sauternes",
+ scores:{RP:98,WS:97,JS:99},drink:{status:"hold",label:"2025–2080+",pos:.12,txt:"100년을 사는 와인 — 서두를 필요 없음"},
+ sellers:[["신세계L&B",458000,"무료배송"],["롯데백화점",475000,"무료배송"],["와인앤모어",468000,"매장 픽업"]],
+ aromas:["살구 콩피","꿀","사프란","오렌지 마멀레이드"],pairing:["푸아그라","블루치즈","크렘 브륄레"],profile:{body:4,tannin:1,acid:4,sweet:5},
+ desc:"귀부 와인의 정점이자 유일무이한 존재. 꿀과 살구의 관능적인 농밀함 속에 놀라운 산미가 균형을 잡습니다."})
+];
+
+const TAGS=["탄닌 단단함","탄닌 부드러움","산도 높음","산도 낮음","풀바디","라이트바디","과실향","오크·바닐라","미네랄","꽃향","허브","스파이시","버터리","달콤함","긴 여운"];
+const FMT=n=>n.toLocaleString("ko-KR");
+const avgPrice=w=>Math.round(w.sellers.reduce((s,p)=>s+p[1],0)/w.sellers.length/100)*100;
+const minPrice=w=>Math.min(...w.sellers.map(p=>p[1]));
+const maxPrice=w=>Math.max(...w.sellers.map(p=>p[1]));
+const bestScore=w=>Math.max(w.scores.RP||0,w.scores.WS||0,w.scores.JS||0);
+const byId=id=>WINES.find(x=>x.id===id);
+
+/* 시드 기반 평균가 추이 (와인별 고정 곡선) */
+function seedRand(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}
+  return()=>{h=Math.imul(h^h>>>15,2246822507);h=Math.imul(h^h>>>13,3266489909);return((h^=h>>>16)>>>0)/4294967296}}
+function histOf(w){const r=seedRand(w.id),n=12,end=avgPrice(w),out=[];let v=end*(0.9+r()*0.06);
+  for(let i=0;i<n;i++){out.push(v);v+=end*(r()-0.42)*0.025}out[n-1]=end;return out}
+
+/* ═══════════ 커뮤니티 후기 (시드) ═══════════ */
+const SEED_RV=[
+{wineId:"margaux",user:"셀러부부",rating:5,text:"결혼 10주년에 개봉. 첫 향부터 압도적이었고 3시간에 걸쳐 계속 변했다. 인생 와인 갱신.",date:"2026-06-14",likes:41,tags:["꽃향","긴 여운","탄닌 부드러움"]},
+{wineId:"margaux",user:"목요일의피노",rating:4.5,text:"기대가 하늘이었는데 그 기대를 거의 채움. 다만 아직 어리다는 느낌. 5년 뒤 한 병 더.",date:"2026-03-02",likes:27,tags:["탄닌 단단함","긴 여운"]},
+{wineId:"sassicaia",user:"와인쟁이K",rating:4.5,text:"허브향이 정말 사시카이아답다. 비스테카랑 먹었는데 완벽. 디캔팅 2시간 필수.",date:"2026-05-21",likes:33,tags:["허브","미네랄","긴 여운"]},
+{wineId:"sassicaia",user:"하영",rating:4,text:"명성만큼 화려하진 않지만 우아함은 확실. 조용히 좋은 와인.",date:"2026-04-10",likes:12,tags:["미네랄","탄닌 단단함"]},
+{wineId:"opusone",user:"부장님몰래한잔",rating:5,text:"회사 창립기념일 회식에서. 나파의 화려함이란 이런 것. 모두가 조용해졌다.",date:"2026-06-30",likes:19,tags:["과실향","오크·바닐라","풀바디"]},
+{wineId:"cloudybay",user:"로제말고레드",rating:4,text:"화이트는 잘 안 마시는데 이건 인정. 여름 저녁 테라스 최강자.",date:"2026-07-05",likes:22,tags:["과실향","산도 높음","라이트바디"]},
+{wineId:"cloudybay",user:"미드나잇드링커",rating:3.5,text:"향은 화려한데 매년 마시니 좀 뻔한 느낌도. 그래도 가격 생각하면 준수.",date:"2026-05-18",likes:9,tags:["과실향","산도 높음"]},
+{wineId:"domp",user:"셀러부부",rating:5,text:"프로포즈 성공 기념 후기입니다. 와인이 8할은 했다고 생각합니다.",date:"2026-05-30",likes:58,tags:["긴 여운","미네랄"]},
+{wineId:"domp",user:"와인쟁이K",rating:4.5,text:"2013 산미가 정말 좋다. 2012보다 날렵한 스타일. 굴이랑 먹으면 기절.",date:"2026-02-14",likes:31,tags:["산도 높음","미네랄","긴 여운"]},
+{wineId:"catena",user:"목요일의피노",rating:4.5,text:"말벡이 이렇게 우아할 수 있다니. 15만원 이하 레드 중 최고 가성비라 확신.",date:"2026-06-08",likes:25,tags:["과실향","꽃향","풀바디"]},
+{wineId:"fontodi",user:"하영",rating:4.5,text:"토마토 파스타랑 먹으면 산미가 춤을 춘다. 냉장고에 상비 중.",date:"2026-07-01",likes:17,tags:["산도 높음","과실향","허브"]},
+{wineId:"lesclos",user:"미드나잇드링커",rating:5,text:"광어회+레클로 조합은 국룰로 지정해야 한다. 부싯돌 미네랄이 진짜다.",date:"2026-06-20",likes:36,tags:["미네랄","산도 높음","긴 여운"]},
+{wineId:"montes",user:"부장님몰래한잔",rating:4,text:"3만원의 행복. 불고기랑 최고. 와인 입문하는 후배들한테 늘 이거 추천.",date:"2026-07-12",likes:29,tags:["과실향","탄닌 부드러움"]},
+{wineId:"montes",user:"로제말고레드",rating:3.5,text:"무난 그 자체. 놀라움은 없지만 실망도 없는 안전한 선택.",date:"2026-06-02",likes:8,tags:["과실향"]},
+{wineId:"caymus",user:"셀러부부",rating:4,text:"달콤한 과실 폭탄. 와인 안 좋아하던 친구도 이건 맛있다고. 호불호의 호 쪽.",date:"2026-04-25",likes:15,tags:["과실향","오크·바닐라","탄닌 부드러움"]},
+{wineId:"yquem",user:"와인쟁이K",rating:5,text:"블루치즈와 디켐. 미식의 끝은 단짠이라는 걸 증명하는 조합. 한 모금에 향이 열두 번 바뀐다.",date:"2026-03-15",likes:44,tags:["달콤함","긴 여운","꽃향"]},
+{wineId:"loosen",user:"하영",rating:4.5,text:"엽떡이랑 마셨는데 매운맛이 리셋되는 마법. 도수도 낮아서 부담 없음.",date:"2026-07-08",likes:21,tags:["달콤함","산도 높음","라이트바디"]},
+{wineId:"talbot",user:"미드나잇드링커",rating:4,text:"생쥘리앙의 안정감. 소개팅 2차에서 아는 척하기 좋은 와인이기도 하다.",date:"2026-05-05",likes:11,tags:["탄닌 단단함","과실향"]}
+];
+
+/* ═══════════ 상태 ═══════════ */
+let state={filter:"전체",query:"",alerts:{},notes:[],user:null};
+try{const u=localStorage.getItem("cave2-user");if(u)state.user=JSON.parse(u);
+    const n=localStorage.getItem("cave2-notes");if(n)state.notes=JSON.parse(n);
+    const a=localStorage.getItem("cave2-alerts");if(a)state.alerts=JSON.parse(a);}catch(e){}
+const persist=()=>{try{
+  localStorage.setItem("cave2-notes",JSON.stringify(state.notes));
+  localStorage.setItem("cave2-alerts",JSON.stringify(state.alerts));
+  if(state.user)localStorage.setItem("cave2-user",JSON.stringify(state.user));
+  else localStorage.removeItem("cave2-user");
+}catch(e){}};
+
+/* ═══════════ 병 아트 ═══════════ */
+function bottle(cls,label){
+  return `<svg viewBox="0 0 60 152" aria-hidden="true">
+    <rect x="25" y="2" width="10" height="9" rx="2" fill="url(#${cls})" opacity=".85"/>
+    <path d="M25.5 11v11c0 5-1.6 8.2-4.6 12.2-4 5.4-6.4 9.8-6.4 17.8v85a8 8 0 008 8h15a8 8 0 008-8v-85c0-8-2.4-12.4-6.4-17.8-3-4-4.6-7.2-4.6-12.2V11z" fill="url(#${cls})"/>
+    <path d="M27.5 14v8c0 6-2 10-5 14" stroke="rgba(255,255,255,.28)" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <rect x="19" y="80" width="22" height="30" rx="2" fill="rgba(250,247,243,.92)"/>
+    <text x="30" y="99" text-anchor="middle" font-size="9.5" font-weight="700" fill="#3A2A2E" font-family="Georgia,serif">${label}</text>
+  </svg>`;
+}
+
+/* ═══════════ 내비게이션 ═══════════ */
+const VIEWS=["explore","detail","compose","cellar"];
+function go(v,arg){
+  VIEWS.forEach(x=>document.getElementById("view-"+x).classList.toggle("hidden",x!==v));
+  document.getElementById("tab-explore").setAttribute("aria-current",v==="explore");
+  document.getElementById("tab-cellar").setAttribute("aria-current",v==="cellar");
+  if(v==="detail")renderDetail(arg);
+  if(v==="compose")renderCompose(arg);
+  if(v==="cellar")renderCellar();
+  window.scrollTo({top:0});
+}
+
+/* ═══════════ 헤더 사용자 ═══════════ */
+function renderUser(){
+  const s=document.getElementById("user-slot");
+  s.innerHTML=state.user
+    ?`<button class="user-chip" onclick="go('cellar')"><span class="avatar">${state.user.name[0]||"C"}</span><span>${state.user.name}</span></button>`
+    :`<button class="login-link" onclick="openAuth()">로그인</button>`;
+}
+
+/* ═══════════ 계정 · 인증 ═══════════
+   기본: 게스트 모드(이 기기에만 저장, 닉네임·이메일 중복 차단, 가입된 이메일만 로그인).
+   config.js에 Firebase 구성을 넣으면 실계정 모드로 전환:
+   이메일/비밀번호 가입 → 실제 인증 메일 발송 → 인증 완료된 계정만 로그인. */
+const RESERVED=new Set(SEED_RV.map(r=>r.user));
+let accounts=[];try{const a=localStorage.getItem("cave2-accounts");if(a)accounts=JSON.parse(a)}catch(e){}
+const saveAccounts=()=>{try{localStorage.setItem("cave2-accounts",JSON.stringify(accounts))}catch(e){}};
+const EMAIL_RE=/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/;
+
+const FB={on:false,auth:null,db:null};
+(async function initFirebase(){
+  const cfg=CFG.firebase;
+  if(!cfg)return;
+  const load=src=>new Promise((res,rej)=>{const s=document.createElement("script");s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s)});
+  try{
+    const V="10.14.1";
+    await load("https://www.gstatic.com/firebasejs/"+V+"/firebase-app-compat.js");
+    await load("https://www.gstatic.com/firebasejs/"+V+"/firebase-auth-compat.js");
+    await load("https://www.gstatic.com/firebasejs/"+V+"/firebase-firestore-compat.js");
+    firebase.initializeApp(cfg);FB.auth=firebase.auth();FB.db=firebase.firestore();FB.on=true;
+    FB.auth.onAuthStateChanged(u=>{
+      if(u&&u.emailVerified){state.user={name:u.displayName||u.email.split("@")[0],email:u.email,uid:u.uid}}
+      else if(state.user&&state.user.uid){state.user=null}
+      persist();renderUser();
+    });
+  }catch(e){console.warn("Firebase 초기화 실패 — 게스트 모드로 동작합니다",e)}
+})();
+
+let afterAuth=null,authMode="login";
+function openAuth(next,mode){afterAuth=next||null;authMode=mode||((accounts.length||FB.on)?"login":"signup");renderAuth()}
+function renderAuth(msg,isErr){
+  const note=FB.on
+    ?"실계정 모드 — 인증 메일을 확인한 계정만 로그인할 수 있습니다."
+    :"게스트 모드 — 계정은 이 기기에만 저장됩니다. 백엔드(Firebase) 연결 시 실제 이메일 인증이 활성화됩니다.";
+  document.getElementById("auth-root").innerHTML=`
+  <div class="overlay" onclick="if(event.target===this)closeAuth()">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="로그인">
+      <p class="caps">WELCOME TO CAVE</p>
+      <div class="auth-tabs">
+        <button aria-pressed="${authMode==="login"}" onclick="authMode='login';renderAuth()">로그인</button>
+        <button aria-pressed="${authMode==="signup"}" onclick="authMode='signup';renderAuth()">회원가입</button>
+      </div>
+      ${authMode==="signup"?`<label for="au-name">닉네임</label>
+      <input id="au-name" placeholder="예: 목요일의피노" maxlength="12" autocomplete="nickname">`:""}
+      <label for="au-mail">이메일</label>
+      <input id="au-mail" type="email" placeholder="you@example.com" autocomplete="email">
+      ${FB.on?`<label for="au-pw">비밀번호</label>
+      <input id="au-pw" type="password" placeholder="6자 이상" autocomplete="${authMode==="signup"?"new-password":"current-password"}">`:""}
+      <p class="auth-msg${isErr?" err":""}">${msg||note}</p>
+      <button class="btn-primary" onclick="submitAuth()">${authMode==="signup"?"가입하기":"로그인"}</button>
+      <button class="skip" onclick="closeAuth()">나중에 하기</button>
+    </div>
+  </div>`;
+  setTimeout(()=>{const f=document.getElementById(authMode==="signup"?"au-name":"au-mail");if(f)f.focus()},50);
+}
+function closeAuth(){document.getElementById("auth-root").innerHTML="";afterAuth=null}
+function finishLogin(){
+  persist();renderUser();
+  const next=afterAuth;document.getElementById("auth-root").innerHTML="";afterAuth=null;
+  toast("환영합니다, "+state.user.name+"님");
+  if(next)next();
+}
+async function submitAuth(){
+  const mail=(document.getElementById("au-mail").value||"").trim().toLowerCase();
+  if(!EMAIL_RE.test(mail)){renderAuth("이메일 형식을 확인해 주세요.",1);return}
+  if(authMode==="signup"){
+    const name=(document.getElementById("au-name").value||"").trim();
+    if(name.length<2){renderAuth("닉네임은 2자 이상이어야 합니다.",1);return}
+    if(RESERVED.has(name)||accounts.some(a=>a.name===name)){renderAuth("이미 사용 중인 닉네임입니다.",1);return}
+    if(FB.on){
+      const pw=document.getElementById("au-pw").value;
+      if(pw.length<6){renderAuth("비밀번호는 6자 이상이어야 합니다.",1);return}
+      try{
+        const dup=await FB.db.collection("usernames").doc(name.toLowerCase()).get();
+        if(dup.exists){renderAuth("이미 사용 중인 닉네임입니다.",1);return}
+        const cred=await FB.auth.createUserWithEmailAndPassword(mail,pw);
+        await cred.user.updateProfile({displayName:name});
+        await FB.db.collection("usernames").doc(name.toLowerCase()).set({uid:cred.user.uid});
+        await cred.user.sendEmailVerification();
+        await FB.auth.signOut();
+        authMode="login";
+        renderAuth(mail+" 주소로 인증 메일을 보냈습니다. 메일의 링크를 누른 뒤 로그인해 주세요.");
+      }catch(e){renderAuth(fbErr(e),1)}
+      return;
+    }
+    if(accounts.some(a=>a.email===mail)){renderAuth("이미 가입된 이메일입니다. 로그인해 주세요.",1);return}
+    accounts.push({name,email:mail});saveAccounts();
+    state.user={name,email:mail};finishLogin();return;
+  }
+  if(FB.on){
+    const pw=document.getElementById("au-pw").value;
+    try{
+      const cred=await FB.auth.signInWithEmailAndPassword(mail,pw);
+      if(!cred.user.emailVerified){
+        try{await cred.user.sendEmailVerification()}catch(e){}
+        await FB.auth.signOut();
+        renderAuth("이메일 인증이 완료되지 않았습니다. 인증 메일을 다시 보냈으니 확인 후 로그인해 주세요.",1);
+        return;
+      }
+      state.user={name:cred.user.displayName||mail.split("@")[0],email:mail,uid:cred.user.uid};
+      finishLogin();
+    }catch(e){renderAuth(fbErr(e),1)}
+    return;
+  }
+  const acc=accounts.find(a=>a.email===mail);
+  if(!acc){renderAuth("가입되지 않은 이메일입니다. 회원가입을 먼저 해주세요.",1);return}
+  state.user={name:acc.name,email:acc.email};finishLogin();
+}
+function fbErr(e){
+  const m={"auth/email-already-in-use":"이미 가입된 이메일입니다.",
+    "auth/invalid-credential":"이메일 또는 비밀번호가 올바르지 않습니다.",
+    "auth/wrong-password":"비밀번호가 올바르지 않습니다.",
+    "auth/user-not-found":"가입되지 않은 이메일입니다.",
+    "auth/invalid-email":"이메일 형식을 확인해 주세요.",
+    "auth/weak-password":"비밀번호는 6자 이상이어야 합니다.",
+    "auth/too-many-requests":"시도가 너무 많습니다. 잠시 후 다시 시도해 주세요."};
+  return m[e.code]||("오류가 발생했습니다: "+(e.code||e.message));
+}
+function logout(){
+  if(FB.on&&FB.auth.currentUser)FB.auth.signOut();
+  state.user=null;persist();renderUser();go("explore");toast("로그아웃되었습니다");
+}
+
+/* ═══════════ 탐색 ═══════════ */
+function renderChips(){
+  const cats=["전체","레드","화이트","스파클링","스위트","5만원 이하","15만원 이하","드링크 나우"];
+  document.getElementById("chips").innerHTML=cats.map(c=>
+    `<button class="chip" aria-pressed="${state.filter===c}" onclick="setFilter('${c}')">${c}</button>`).join("");
+}
+function setFilter(c){state.filter=c;renderChips();renderGrid()}
+function match(w){
+  const f=state.filter;
+  if(["레드","화이트","스파클링","스위트"].includes(f)&&w.type!==f)return false;
+  if(f==="5만원 이하"&&avgPrice(w)>50000)return false;
+  if(f==="15만원 이하"&&avgPrice(w)>150000)return false;
+  if(f==="드링크 나우"&&w.drink.status==="hold")return false;
+  const q=state.query.trim().toLowerCase();
+  if(q&&!(w.ko+w.en+w.region+w.country+w.grape+w.type).toLowerCase().includes(q))return false;
+  return true;
+}
+function stTxt(w){const m={now:["st-now","드링크 나우"],hold:["st-hold","셀러링"],peak:["st-peak","정점"]};const[c,t]=m[w.drink.status];return `<span class="${c}">${t}</span>`}
+function renderGrid(){
+  let list=WINES.filter(match);
+  const s=document.getElementById("sort").value;
+  if(s==="priceAsc")list.sort((a,b)=>avgPrice(a)-avgPrice(b));
+  else if(s==="priceDesc")list.sort((a,b)=>avgPrice(b)-avgPrice(a));
+  else if(s==="score")list.sort((a,b)=>bestScore(b)-bestScore(a));
+  document.getElementById("count-line").textContent=list.length+"종의 와인";
+  document.getElementById("grid").innerHTML=list.length?list.map(w=>`
+    <button class="card" onclick="go('detail','${w.id}')">
+      <div class="bottle-wrap">${bottle(w.cls,w.vintage)}</div>
+      <div class="info">
+        <div class="region">${w.country} · ${w.region}</div>
+        <div class="name">${w.ko}</div>
+        <div class="name-en serif">${w.en}</div>
+        <div class="meta">
+          <span class="sc serif">${bestScore(w)}<small>PT</small></span>
+          <span class="dot">·</span>${stTxt(w)}
+          <span class="price"><span class="v">₩${FMT(avgPrice(w))}</span><small>평균가</small></span>
+        </div>
+      </div>
+    </button>`).join(""):
+    `<p class="j-empty">조건에 맞는 와인이 없습니다.<br>필터를 바꾸거나 AI 소믈리에에게 질문해 보세요.</p>`;
+}
+document.getElementById("q").addEventListener("input",e=>{state.query=e.target.value;renderGrid()});
+document.getElementById("q").addEventListener("keydown",e=>{if(e.key==="Enter")runAI()});
+function tryQ(t){document.getElementById("q").value=t;state.query="";runAI()}
+
+/* ═══════════ AI 소믈리에 ═══════════
+   config.js의 geminiKey가 설정되면 Gemini API를 실시간 호출해
+   전 세계 와인을 대상으로 검색·추천합니다.
+   키가 없거나 네트워크가 차단된 환경에서는 내장 엔진으로 동작합니다. */
+function askSommelier(q){
+  const t=q.toLowerCase();
+  const has=(...ws)=>ws.some(w=>t.includes(w));
+  let pool=[...WINES],reasons={},intro="";
+  const R=(w,txt)=>reasons[w.id]=txt;
+
+  const direct=WINES.filter(w=>(w.ko+w.en+w.grape).toLowerCase().includes(t)&&t.length>1);
+  if(direct.length&&t.length>=2&&!has(" ")){
+    pool=direct;intro="찾으시는 와인으로 보입니다.";pool.forEach(w=>R(w,w.region));
+  }else if(has("스테이크","소고기","등심","안심","립아이","한우","양갈비","바베큐","고기")){
+    pool=pool.filter(w=>w.type==="레드"&&w.profile.body>=4);
+    intro="붉은 육류에는 지방을 잡아줄 단단한 구조의 풀바디 레드가 정석입니다.";
+    pool.forEach(w=>R(w,"단단한 탄닌이 육즙·지방과 균형"));
+  }else if(has("삼겹살","돼지","목살","수육")){
+    pool=pool.filter(w=>["cristom","jadot","fontodi","rioja904"].includes(w.id));
+    intro="돼지고기에는 산미가 살아있는 피노 누아·산지오베제 계열이 기름기를 개운하게 정리합니다.";
+    pool.forEach(w=>R(w,"산미가 기름기를 정리"));
+  }else if(has("매운","떡볶이","마라","김치","불닭","한식","커리")){
+    pool=pool.filter(w=>["loosen","cloudybay","jolivet","bollinger"].includes(w.id));
+    intro="매운맛에는 은은한 단맛과 낮은 도수의 리슬링이 교과서적인 답입니다. 산미 좋은 화이트·샴페인도 훌륭합니다.";
+    pool.forEach(w=>R(w,w.id==="loosen"?"약간의 단맛이 매운맛을 진정":"산미와 기포가 입안을 리셋"));
+  }else if(has("해산물","생선","회","굴","초밥","스시","랍스터","조개")){
+    pool=pool.filter(w=>w.type==="화이트"||w.type==="스파클링");
+    intro="해산물에는 산도와 미네랄이 살아있는 화이트·스파클링이 어울립니다.";
+    pool.forEach(w=>R(w,"높은 산도와 미네랄이 감칠맛을 살림"));
+  }else if(has("치킨","피자","파스타","치즈")){
+    pool=pool.filter(w=>["fontodi","bollinger","montes","banfi","montelena"].includes(w.id));
+    intro="캐주얼한 음식일수록 산미가 좋은 와인이 페어링의 폭을 넓힙니다. 치킨에는 의외로 샴페인이 최고의 짝입니다.";
+    pool.forEach(w=>R(w,w.id==="bollinger"?"튀김+기포는 검증된 공식":"산미가 토마토·치즈와 조화"));
+  }else if(has("디저트","달콤","케이크","티라미수","단","푸아그라")){
+    pool=pool.filter(w=>w.type==="스위트"||w.profile.sweet>=3);
+    intro="디저트에는 디저트보다 더 달콤한 와인을 — 소테른의 오랜 원칙입니다.";
+    pool.forEach(w=>R(w,"꿀·살구의 농밀한 단맛"));
+  }else if(has("선물","기념일","축하","프로포즈","상견례","승진")){
+    pool=pool.filter(w=>bestScore(w)>=96);
+    intro="특별한 날에는 이름값과 점수가 검증된 아이콘 와인이 실패가 없습니다.";
+    pool.forEach(w=>R(w,"평론가 "+bestScore(w)+"점 · 국제적 인지도"));
+  }else if(has("샴페인","스파클링","버블","축배")){
+    pool=pool.filter(w=>w.type==="스파클링");
+    intro="기포가 필요한 순간이군요. 빈티지와 논빈티지, 목적에 따라 골라보세요.";
+    pool.forEach(w=>R(w,w.vintage==="NV"?"매일의 축배용 논빈티지":"기념일용 빈티지 샴페인"));
+  }else if(has("가성비","저렴","데일리","입문","싸게","혼술","막")){
+    pool=pool.filter(w=>avgPrice(w)<=100000);pool.sort((a,b)=>bestScore(b)/avgPrice(b)<bestScore(a)/avgPrice(a)?-1:1);
+    intro="일상에서 부담 없이, 그러나 품질은 타협하지 않는 순서로 골랐습니다.";
+    pool.forEach(w=>R(w,"₩"+FMT(avgPrice(w))+" — 가격 대비 완성도"));
+  }else if(has("여름","시원","테라스","캠핑","피크닉")){
+    pool=pool.filter(w=>w.type!=="레드"||w.profile.body<=3);
+    intro="더운 날에는 차게 식힌 화이트·스파클링, 혹은 가벼운 레드가 답입니다.";
+    pool.forEach(w=>R(w,"차게 즐기기 좋은 스타일"));
+  }else if(has("숙성","셀러","장기","보관","투자")){
+    pool=pool.filter(w=>w.drink.status==="hold");
+    intro="셀러에 눕혀둘 와인이라면 구조감과 트랙 레코드가 검증된 장기 숙성형을 권합니다.";
+    pool.forEach(w=>R(w,"음용 적기 "+w.drink.label));
+  }else if(has("피노","가벼운","라이트","부드러")){
+    pool=pool.filter(w=>w.type==="레드"&&w.profile.body<=3||w.grape.includes("피노 누아"));
+    intro="섬세하고 부드러운 스타일을 찾으시는군요.";
+    pool.forEach(w=>R(w,"가볍고 우아한 스타일"));
+  }else if(has("화이트")){
+    pool=pool.filter(w=>w.type==="화이트");
+    intro="산미와 무게감이 다른 화이트를 비교해 보세요.";
+    pool.forEach(w=>R(w,w.profile.acid>=5?"팽팽한 산미":"균형 잡힌 스타일"));
+  }else{
+    pool.sort((a,b)=>bestScore(b)-bestScore(a));
+    intro="질문을 넓게 해석해 평가가 가장 탄탄한 순서로 제안합니다. 음식·예산·상황을 함께 알려주시면 더 정확해집니다.";
+    pool.forEach(w=>R(w,"평론가 최고 "+bestScore(w)+"점"));
+  }
+  const m=t.match(/(\d+)\s*만\s*원/);
+  if(m){const cap=(+m[1]+(t.includes("대")?9:0))*10000;
+    const f=pool.filter(w=>avgPrice(w)<=cap);if(f.length)pool=f}
+  return{intro,picks:pool.slice(0,3),reasons};
+}
+function esc(s){return String(s||"").replace(/</g,"&lt;")}
+async function geminiAsk(q){
+  const prompt=`너는 한국의 와인 전문 소믈리에다. 사용자의 질문에 맞는 와인을 전 세계 와인 중에서 추천하라.
+반드시 아래 JSON 형식만 출력하라(다른 텍스트 금지):
+{"intro":"한두 문장의 답변","picks":[{"ko":"한글 이름","en":"영문 이름","country":"국가","region":"산지","type":"레드|화이트|스파클링|스위트|로제","price":"한국 예상 평균가(예: ₩85,000)","score":"평론가 점수 숫자(모르면 빈 문자열)","why":"추천 이유 한 문장"}]}
+picks는 정확히 3개. 실존하는 와인만. 한국에서 구할 수 있는 와인을 우선하라.
+질문: ${q}`;
+  const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key="+encodeURIComponent(CFG.geminiKey),{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({contents:[{parts:[{text:prompt}]}],
+      generationConfig:{responseMimeType:"application/json",temperature:.7}})});
+  if(!r.ok)throw new Error("Gemini HTTP "+r.status);
+  const j=await r.json();
+  return JSON.parse(j.candidates[0].content.parts[0].text);
+}
+function localWine(p){
+  const norm=s=>String(s||"").toLowerCase().replace(/[^a-z가-힣0-9]/g,"");
+  const en=norm(p.en),ko=norm(p.ko);
+  return WINES.find(w=>{
+    const we=norm(w.en),wk=norm(w.ko);
+    return (en&&we&&(we.includes(en.slice(0,12))||en.includes(we)))||(ko&&wk&&(ko.includes(wk.slice(0,8))||wk.includes(ko)));
+  });
+}
+function renderAIcard(q,intro,picksHtml,footer){
+  document.getElementById("ai-out").innerHTML=`<div class="ai-card">
+    <div class="who"><span class="caps">AI SOMMELIER</span><button class="ai-close" onclick="document.getElementById('ai-out').innerHTML=''">닫기 ✕</button></div>
+    <p class="ai-q">“${esc(q)}”</p>
+    <p class="a">${esc(intro)}</p>
+    <div class="ai-picks">${picksHtml}</div>${footer||""}</div>`;
+}
+async function runAI(){
+  const q=document.getElementById("q").value.trim();
+  const out=document.getElementById("ai-out");
+  if(!q){out.innerHTML="";document.getElementById("q").focus();return}
+  out.innerHTML=`<div class="ai-card"><div class="who"><span class="caps">AI SOMMELIER</span></div>
+    <div class="thinking" role="status" aria-label="분석 중"><i></i><i></i><i></i></div></div>`;
+  if(CFG.geminiKey){
+    try{
+      const res=await geminiAsk(q);
+      const html=(res.picks||[]).slice(0,3).map(p=>{
+        const w=localWine(p);
+        if(w)return `<button class="ai-pick" onclick="go('detail','${w.id}')">
+          <div><div class="nm">${w.ko}</div><div class="why">${esc(p.why)}</div></div>
+          <div class="pr">₩${FMT(avgPrice(w))}<small>평균가</small></div></button>`;
+        return `<a class="ai-pick" href="https://www.wine-searcher.com/find/${encodeURIComponent(p.en||p.ko)}" target="_blank" rel="noopener">
+          <div><div class="nm">${esc(p.ko||p.en)} <small style="color:var(--ink3)">↗</small></div>
+          <div class="why">${esc([p.country,p.region].filter(Boolean).join(" · "))}${p.why?" · "+esc(p.why):""}</div></div>
+          <div class="pr">${esc(p.price||"")}<small>${p.score?esc(p.score)+"pt":"예상가"}</small></div></a>`;
+      }).join("");
+      renderAIcard(q,res.intro||"이런 와인을 추천드립니다.",html,
+        `<p class="search-hint" style="margin:12px 0 0">Gemini 실시간 검색 — 목록에 없는 와인은 Wine-Searcher로 연결됩니다</p>`);
+      return;
+    }catch(e){console.warn("Gemini 호출 실패 — 내장 엔진으로 대체합니다",e)}
+  }
+  setTimeout(()=>{
+    const{intro,picks,reasons}=askSommelier(q);
+    const html=picks.map(w=>`
+      <button class="ai-pick" onclick="go('detail','${w.id}')">
+        <div><div class="nm">${w.ko}</div><div class="why">${reasons[w.id]||""}</div></div>
+        <div class="pr">₩${FMT(avgPrice(w))}<small>평균가</small></div></button>`).join("");
+    renderAIcard(q,intro,html,
+      CFG.geminiKey?"":`<p class="search-hint" style="margin:12px 0 0">config.js에 Gemini API 키를 넣으면 전 세계 와인 검색으로 확장됩니다</p>`);
+  },850);
+}
+
+/* ═══════════ 차트 ═══════════ */
+function vintageChart(w){
+  const data=VIN[w.vinKey],years=Object.keys(data),vals=Object.values(data);
+  const Wd=Math.max(560,years.length*56),H=200,pad=30,base=80,top=100;
+  const bw=Math.min(32,(Wd-pad*2)/years.length-14),step=(Wd-pad*2)/years.length;
+  const y=v=>H-30-((v-base)/(top-base))*(H-72);
+  let bars="";
+  years.forEach((yr,i)=>{
+    const v=vals[i],x=pad+step*i+(step-bw)/2,sel=+yr===w.vintage;
+    bars+=`<rect x="${x}" y="${y(v)}" width="${bw}" height="${H-30-y(v)}" rx="4"
+      fill="${sel?"var(--accent)":"var(--line)"}"><title>${yr}년 · ${v}점</title></rect>
+      <text x="${x+bw/2}" y="${y(v)-7}" text-anchor="middle" font-size="11.5" font-weight="${sel?800:500}"
+        fill="${sel?"var(--accent)":"var(--ink3)"}" font-family="inherit">${v}</text>
+      <text x="${x+bw/2}" y="${H-9}" text-anchor="middle" font-size="11"
+        fill="${sel?"var(--ink)":"var(--ink3)"}" font-weight="${sel?700:400}" font-family="inherit">${String(yr).slice(2)}'</text>`;
+  });
+  return `<div class="vin-wrap"><svg class="chart" viewBox="0 0 ${Wd} ${H}" style="min-width:${Wd}px" role="img" aria-label="빈티지별 작황 지수">
+    <line x1="${pad}" y1="${H-30}" x2="${Wd-pad}" y2="${H-30}" stroke="var(--hair)"/>${bars}</svg></div>
+  <div class="legend"><span><i style="background:var(--accent)"></i>이 와인의 빈티지</span><span><i style="background:var(--line)"></i>${VIN_LABEL[w.vinKey]} 작황 지수</span></div>`;
+}
+function priceChart(w){
+  const v=histOf(w),Wd=620,H=170,pad=14,padB=24,padT=18;
+  const mn=Math.min(...v),mx=Math.max(...v);
+  const x=i=>pad+i*(Wd-pad*2)/(v.length-1);
+  const y=n=>padT+(1-(n-mn)/((mx-mn)||1))*(H-padT-padB);
+  const pts=v.map((n,i)=>`${x(i)},${y(n)}`).join(" ");
+  const lab=n=>"₩"+FMT(Math.round(n/1000)*1000);
+  const months=["8월","","10월","","12월","","2월","","4월","","6월","7월"];
+  const axis=months.map((m,i)=>m?`<text x="${x(i)}" y="${H-6}" font-size="10.5" text-anchor="middle" fill="var(--ink3)" font-family="inherit">${m}</text>`:"").join("");
+  return `<svg class="chart" viewBox="0 0 ${Wd} ${H}" role="img" aria-label="최근 12개월 평균가 추이">
+    <polygon points="${pad},${H-padB} ${pts} ${Wd-pad},${H-padB}" fill="var(--accent)" opacity=".07"/>
+    <polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${x(v.length-1)}" cy="${y(v[v.length-1])}" r="4.5" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>
+    ${axis}</svg>
+  <div class="legend"><span>최근 12개월 · 국내 판매처 평균가 기준</span><span>저점 ${lab(mn)} · 고점 ${lab(mx)}</span></div>`;
+}
+
+/* ═══════════ 상세 ═══════════ */
+function reviewsOf(id){
+  const local=state.notes.filter(n=>n.wineId===id).map(n=>({...n,mine:true}));
+  return[...local,...SEED_RV.filter(r=>r.wineId===id)];
+}
+function starTxt(r){return"★".repeat(Math.round(r))+"☆".repeat(5-Math.round(r))}
+function rvPanelHtml(rvs){
+  const rAvg=rvs.length?(rvs.reduce((s,r)=>s+r.rating,0)/rvs.length):0;
+  const list=rvs.length?rvs.map(r=>`
+    <div class="rv">
+      <div class="rv-top"><span class="avatar">${(r.user||"?")[0]}</span><span class="u">${esc(r.user)}</span>
+        ${r.mine?'<span class="mine">내 후기</span>':""}
+        <span class="st">${starTxt(r.rating)} ${(+r.rating).toFixed(1)}</span><span class="dt">${r.date||""}</span></div>
+      ${r.text?`<p class="rv-txt">${esc(r.text)}</p>`:""}
+      ${r.tags&&r.tags.length?`<div class="rv-tags">${r.tags.map(t=>`<span>${esc(t)}</span>`).join("")}</div>`:""}
+      ${(r.place||r.people)?`<div class="rv-meta">${[r.place,r.people].filter(Boolean).map(esc).join(" · ")}</div>`:""}
+      ${r.photos&&r.photos.length?`<div class="rv-photos">${r.photos.map(p=>`<img src="${p}" alt="후기 사진">`).join("")}</div>`:""}
+      ${r.likes?`<div class="rv-like">도움돼요 ${r.likes}</div>`:""}
+    </div>`).join(""):
+    `<p class="rv-empty">아직 후기가 없습니다. 첫 후기를 남겨보세요.</p>`;
+  return `<div class="rv-sum"><span class="big serif">${rAvg?rAvg.toFixed(1):"–"}</span>
+    <span class="stars">${rAvg?starTxt(rAvg):""}</span><span class="cnt">${rvs.length}개의 후기</span></div>`+list;
+}
+/* Firestore에서 모든 사용자의 후기를 불러와 커뮤니티 섹션 갱신 */
+async function loadRemoteReviews(w){
+  try{
+    const snap=await FB.db.collection("reviews").where("wineId","==",w.id).limit(100).get();
+    const remote=snap.docs.map(d=>{const r=d.data();return{...r,mine:!!(state.user&&state.user.uid&&state.user.uid===r.uid)}})
+      .sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    const all=[...remote,...SEED_RV.filter(r=>r.wineId===w.id)];
+    const p=document.getElementById("rv-panel");
+    if(p)p.innerHTML=rvPanelHtml(all);
+  }catch(e){console.warn("후기 불러오기 실패",e)}
+}
+function renderDetail(id){
+  const w=byId(id);if(!w)return;
+  const avg=avgPrice(w),rvs=reviewsOf(id);
+  const rAvg=rvs.length?(rvs.reduce((s,r)=>s+r.rating,0)/rvs.length):0;
+  const crits=[["RP","Wine Advocate",w.scores.RP],["WS","Wine Spectator",w.scores.WS],["JS","James Suckling",w.scores.JS]].filter(c=>c[2]>0)
+    .map(c=>`<div class="crit"><div class="n serif">${c[2]}</div><div class="src">${c[0]}</div><div class="cap">${c[1]}</div></div>`).join("");
+  const rows=[...w.sellers].sort((a,b)=>a[1]-b[1]).map(p=>`
+    <tr><td>${p[0]}<div class="ship">${p[2]}</div></td><td class="v">₩${FMT(p[1])}</td></tr>`).join("");
+  const on=!!state.alerts[w.id];
+  const PN={body:"바디",tannin:"탄닌",acid:"산도",sweet:"당도"};
+  const pf=Object.entries(w.profile).map(([k,v])=>`
+    <div class="pf-row"><span class="k">${PN[k]}</span>
+      <span class="pf-track"><span class="pf-fill" style="width:${v*20}%"></span></span>
+      <span class="vv">${LV[k][v-1]}</span></div>`).join("");
+  document.getElementById("view-detail").innerHTML=`
+    <button class="backbar" onclick="go('explore')">← 탐색으로</button>
+    <div class="d-head">
+      <div class="d-bottle">${bottle(w.cls,w.vintage)}</div>
+      <div class="d-title">
+        <div class="region">${w.country} · ${w.region}</div>
+        <h2>${w.ko}</h2>
+        <div class="en serif">${w.en} ${w.vintage}</div>
+        <div class="d-stats">
+          <div class="d-stat"><div class="n serif">${bestScore(w)}<em>PT</em></div><div class="k">평론가 최고점</div></div>
+          <div class="d-stat d-price"><div class="n serif">₩${FMT(avg)}</div><div class="k">국내 평균가</div></div>
+          <div class="d-stat"><div class="n serif">${rAvg?rAvg.toFixed(1):"–"}<em>★</em></div><div class="k">애호가 평점 ${rvs.length?`(${rvs.length})`:""}</div></div>
+        </div>
+      </div>
+    </div>
+    <p class="d-desc">${w.desc}</p>
+    <div class="facts">
+      <div class="fact"><div class="k">품종</div><div class="v">${w.grape}</div></div>
+      <div class="fact"><div class="k">도수</div><div class="v">${w.abv}</div></div>
+      <div class="fact"><div class="k">서빙 온도</div><div class="v">${w.serve}</div></div>
+      <div class="fact"><div class="k">디캔팅</div><div class="v">${w.decant}</div></div>
+    </div>
+
+    <section class="sect"><div class="sh"><h3>CRITIC SCORES</h3><div class="rule"></div></div>
+      <p class="sub">주요 평론 매체 100점 척도</p>
+      <div class="panel"><div class="crit-row">${crits}</div></div>
+    </section>
+
+    <section class="sect"><div class="sh"><h3>DRINKING WINDOW</h3><div class="rule"></div></div>
+      <p class="sub">${w.drink.txt}</p>
+      <div class="panel">
+        <div class="drink-strip">${stTxt(w)}
+          <div class="drink-bar"><div class="drink-dot" style="left:${w.drink.pos*100}%"></div></div>
+          <b style="font-variant-numeric:tabular-nums;font-size:14px">${w.drink.label}</b></div>
+        <div class="drink-lab"><span>영 · 숙성 중</span><span>정점 (Peak)</span><span>하락</span></div>
+      </div>
+    </section>
+
+    <section class="sect"><div class="sh"><h3>TASTING PROFILE</h3><div class="rule"></div></div>
+      <p class="sub">아로마와 구조감</p>
+      <div class="panel">
+        <div class="aroma-chips">${w.aromas.map(a=>`<span>${a}</span>`).join("")}</div>
+        <div style="margin-top:6px">${pf}</div>
+        <div class="legend" style="margin-top:14px"><span>추천 페어링 — ${w.pairing.join(" · ")}</span></div>
+      </div>
+    </section>
+
+    <section class="sect"><div class="sh"><h3>VINTAGE CHART</h3><div class="rule"></div></div>
+      <p class="sub">${VIN_LABEL[w.vinKey]} 연도별 작황 — 같은 와인도 해에 따라 완성도가 다릅니다</p>
+      <div class="panel">${vintageChart(w)}</div>
+    </section>
+
+    <section class="sect"><div class="sh"><h3>PRICE</h3><div class="rule"></div></div>
+      <p class="sub">국내 주요 판매처 기준</p>
+      <div class="panel">
+        <div class="avg-line"><span class="big serif">₩${FMT(avg)}</span>
+          <span class="caps" style="letter-spacing:.1em">평균가</span>
+          <span class="rng">판매처 범위 ₩${FMT(minPrice(w))} – ₩${FMT(maxPrice(w))}</span></div>
+        <table class="price-table"><tbody>${rows}</tbody></table>
+        <div class="alert-row">
+          <div><div class="t">평균가 하락 알림</div><div class="d">평균가가 ₩${FMT(avg)} 아래로 내려가면 알려드립니다</div></div>
+          <button class="switch" role="switch" aria-checked="${on}" aria-label="평균가 알림" onclick="toggleAlert('${w.id}',this)"></button>
+        </div>
+      </div>
+    </section>
+
+    <section class="sect"><div class="sh"><h3>PRICE TREND</h3><div class="rule"></div></div>
+      <p class="sub">최근 12개월 평균가 추이</p>
+      <div class="panel">${priceChart(w)}</div>
+    </section>
+
+    <section class="sect"><div class="sh"><h3>COMMUNITY</h3><div class="rule"></div></div>
+      <p class="sub">애호가들의 후기</p>
+      <div class="panel" id="rv-panel">${rvPanelHtml(rvs)}</div>
+    </section>
+
+    <button class="cta-note" onclick="wantCompose('${w.id}')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>
+      이 와인의 후기 남기기
+    </button>`;
+  if(FB.on)loadRemoteReviews(w);
+}
+function toggleAlert(id,btn){
+  state.alerts[id]=!state.alerts[id];if(!state.alerts[id])delete state.alerts[id];
+  persist();btn.setAttribute("aria-checked",!!state.alerts[id]);
+  toast(state.alerts[id]?"평균가 알림을 켰습니다":"알림을 껐습니다");
+}
+function wantCompose(id){
+  if(!state.user){openAuth(()=>go("compose",id));return}
+  go("compose",id);
+}
+
+/* ═══════════ 후기 작성 ═══════════ */
+const LV={body:["매우 가벼움","가벼움","중간","무거움","매우 무거움"],
+  tannin:["거의 없음","부드러움","중간","단단함","매우 단단함"],
+  acid:["낮음","약간 낮음","중간","높음","매우 높음"],
+  sweet:["드라이","오프드라이","약간 달콤","달콤","매우 달콤"]};
+let draft=null;
+function renderCompose(id){
+  const w=byId(id);
+  draft={wineId:w?w.id:"",rating:3.5,tags:[],photos:[],
+    sliders:w?{...w.profile}:{body:3,tannin:3,acid:3,sweet:1}};
+  const today=new Date().toISOString().slice(0,10);
+  const S=[["body","바디"],["tannin","탄닌"],["acid","산도"],["sweet","당도"]];
+  const picker=w?"":`
+    <div class="f-label">와인 선택</div>
+    <select class="wine-pick" onchange="draft.wineId=this.value">
+      <option value="">어떤 와인을 마셨나요?</option>
+      ${WINES.map(x=>`<option value="${x.id}">${x.ko}</option>`).join("")}
+    </select>`;
+  document.getElementById("view-compose").innerHTML=`
+    <button class="backbar" onclick="go(${w?`'detail','${w.id}'`:"'cellar'"})">← 돌아가기</button>
+    <p class="caps" style="margin:18px 0 4px;color:var(--gold)">TASTING NOTE</p>
+    <h1 style="margin:0 0 22px;font-size:24px;font-weight:400">${w?w.ko:"후기 작성"}</h1>
+
+    <div class="panel">
+      ${picker}
+      <div class="f-label" ${w?'style="margin-top:0"':""}>평점</div>
+      <div class="stars-in">
+        <input type="range" min="0.5" max="5" step="0.5" value="3.5" aria-label="평점" oninput="draft.rating=+this.value;updStars()">
+        <span class="disp" id="star-disp"></span><span class="num" id="star-num"></span>
+      </div>
+
+      <div class="f-label">구조감</div>
+      ${S.map(([k,l])=>`
+        <div class="slider-row"><span class="k">${l}</span>
+          <input type="range" min="1" max="5" step="1" value="${draft.sliders[k]}" aria-label="${l}"
+            oninput="draft.sliders['${k}']=+this.value;this.parentNode.querySelector('.vv').textContent=LV['${k}'][this.value-1]">
+          <span class="vv">${LV[k][draft.sliders[k]-1]}</span></div>`).join("")}
+
+      <div class="f-label">맛 태그</div>
+      <div class="tagbox">${TAGS.map(t=>`<button class="tag" aria-pressed="false" onclick="tgTag(this,'${t}')">${t}</button>`).join("")}</div>
+
+      <div class="f-label">사진</div>
+      <input type="file" id="ph" accept="image/*" multiple hidden onchange="addPhotos(this)">
+      <button class="photo-add" onclick="document.getElementById('ph').click()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="3.5"/><path d="M9 6l1.5-2h3L15 6"/></svg>
+        라벨·잔 사진 추가 (최대 4장)
+      </button>
+      <div class="photo-strip" id="ph-strip"></div>
+
+      <div class="f-label">테이스팅 코멘트</div>
+      <textarea class="note" id="f-text" placeholder="향, 맛, 여운, 음식 페어링… 자유롭게 기록하세요"></textarea>
+
+      <div class="f-label">언제 · 어디서 · 누구와</div>
+      <div class="meta-grid">
+        <input type="date" id="f-date" value="${today}" aria-label="마신 날짜">
+        <input type="text" id="f-place" placeholder="장소 (예: 집, 한남동 K바)" aria-label="장소">
+        <input type="text" id="f-people" placeholder="함께한 사람" aria-label="함께한 사람" style="grid-column:1/-1">
+      </div>
+    </div>
+
+    <div class="save-row">
+      <button class="btn-ghost" onclick="go(${w?`'detail','${w.id}'`:"'cellar'"})">취소</button>
+      <button class="btn-primary" onclick="saveNote()">후기 게시</button>
+    </div>`;
+  updStars();
+}
+function updStars(){
+  const r=draft.rating;
+  document.getElementById("star-disp").textContent="★".repeat(Math.round(r))+"☆".repeat(5-Math.round(r));
+  document.getElementById("star-num").textContent=r.toFixed(1);
+}
+function tgTag(btn,t){
+  const on=btn.getAttribute("aria-pressed")==="true";
+  btn.setAttribute("aria-pressed",!on);
+  if(on)draft.tags=draft.tags.filter(x=>x!==t);else draft.tags.push(t);
+}
+function addPhotos(inp){
+  [...inp.files].slice(0,4-draft.photos.length).forEach(f=>{
+    const r=new FileReader();
+    r.onload=e=>{draft.photos.push(e.target.result);
+      document.getElementById("ph-strip").innerHTML=draft.photos.map(p=>`<img src="${p}" alt="첨부 사진">`).join("")};
+    r.readAsDataURL(f);
+  });
+}
+function saveNote(){
+  if(!draft.wineId){toast("와인을 선택해 주세요");return}
+  const w=byId(draft.wineId);
+  const note={wineId:draft.wineId,wineName:w.ko,user:state.user?state.user.name:"익명",
+    rating:draft.rating,tags:[...draft.tags],sliders:{...draft.sliders},
+    text:document.getElementById("f-text").value.trim(),
+    date:document.getElementById("f-date").value,
+    place:document.getElementById("f-place").value.trim(),
+    people:document.getElementById("f-people").value.trim(),photos:[...draft.photos]};
+  state.notes.unshift(note);persist();
+  if(FB.on&&state.user&&state.user.uid){
+    FB.db.collection("reviews").add({wineId:note.wineId,wineName:note.wineName,user:note.user,uid:state.user.uid,
+      rating:note.rating,tags:note.tags,text:note.text,date:note.date,place:note.place,people:note.people,
+      createdAt:Date.now()}).catch(e=>console.warn("후기 서버 동기화 실패",e));
+  }
+  toast("후기가 게시되었습니다");go("detail",draft.wineId);
+}
+
+/* ═══════════ 마이 셀러 ═══════════ */
+function renderCellar(){
+  const el=document.getElementById("view-cellar");
+  if(!state.user){
+    el.innerHTML=`<div class="j-empty" style="padding-top:90px">
+      <p class="caps" style="color:var(--gold)">MY CELLAR</p>
+      <p style="font-size:17px;color:var(--ink);margin:8px 0 4px">나만의 셀러를 시작하세요</p>
+      후기를 기록하고, 가격 알림을 관리하고,<br>다른 애호가들과 시음 경험을 나눌 수 있습니다.<br><br>
+      <button class="btn-primary" style="padding:13px 34px" onclick="openAuth(()=>go('cellar'))">10초 만에 시작하기</button>
+    </div>`;return;
+  }
+  const mine=state.notes;
+  const rAvg=mine.length?(mine.reduce((s,n)=>s+n.rating,0)/mine.length).toFixed(1):"–";
+  const alertIds=Object.keys(state.alerts);
+  const alerts=alertIds.length?alertIds.map(id=>{const w=byId(id);return w?`
+    <button class="alert-mini" style="width:100%;text-align:left" onclick="go('detail','${w.id}')">
+      <span style="color:var(--accent)">●</span> ${w.ko}
+      <span class="p">₩${FMT(avgPrice(w))}</span></button>`:""}).join(""):
+    `<p class="rv-empty">설정된 알림이 없습니다. 와인 상세에서 평균가 알림을 켜보세요.</p>`;
+  const notes=mine.length?mine.map((n,i)=>`
+    <div class="rv" style="border-top:1px solid var(--hair)">
+      <div class="rv-top"><span class="u" style="font-size:14.5px">${n.wineName}</span>
+        <span class="st">${starTxt(n.rating)} ${n.rating.toFixed(1)}</span><span class="dt">${n.date||""}</span></div>
+      ${n.text?`<p class="rv-txt">${n.text}</p>`:""}
+      ${n.tags.length?`<div class="rv-tags">${n.tags.map(t=>`<span>${t}</span>`).join("")}</div>`:""}
+      ${(n.place||n.people)?`<div class="rv-meta">${[n.place,n.people].filter(Boolean).join(" · ")}</div>`:""}
+      ${n.photos&&n.photos.length?`<div class="rv-photos">${n.photos.map(p=>`<img src="${p}" alt="시음 사진">`).join("")}</div>`:""}
+      <div class="rv-like"><button style="color:var(--ink3)" onclick="delNote(${i})">삭제</button></div>
+    </div>`).join(""):
+    `<p class="rv-empty">아직 후기가 없습니다. 첫 후기를 남겨보세요.</p>`;
+  el.innerHTML=`
+    <div class="mc-head">
+      <span class="avatar">${state.user.name[0]}</span>
+      <div><h1>${state.user.name}님의 셀러</h1><div class="em">${state.user.email}</div></div>
+      <button class="out" onclick="logout()">로그아웃</button>
+    </div>
+    <div class="mc-stats">
+      <div class="mc-stat"><div class="n serif">${mine.length}</div><div class="k">나의 후기</div></div>
+      <div class="mc-stat"><div class="n serif">${rAvg}</div><div class="k">평균 평점</div></div>
+      <div class="mc-stat"><div class="n serif">${alertIds.length}</div><div class="k">가격 알림</div></div>
+    </div>
+    <button class="mc-cta" onclick="go('compose')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>
+      새 후기 작성
+    </button>
+    <section class="sect"><div class="sh"><h3>MY NOTES</h3><div class="rule"></div></div>
+      <div class="panel">${notes}</div></section>
+    <section class="sect"><div class="sh"><h3>PRICE ALERTS</h3><div class="rule"></div></div>
+      <div class="panel">${alerts}</div></section>`;
+}
+function delNote(i){state.notes.splice(i,1);persist();renderCellar();toast("후기를 삭제했습니다")}
+
+/* ═══════════ 공통 ═══════════ */
+let toastT;
+function toast(msg){
+  const t=document.getElementById("toast");t.textContent=msg;t.classList.add("on");
+  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("on"),2200);
+}
+renderUser();renderChips();renderGrid();
+</script>
