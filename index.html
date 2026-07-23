@@ -345,6 +345,33 @@ a.ai-pick{text-decoration:none;color:inherit}
 .auth-back{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;color:var(--ink3);margin-top:10px}
 .auth-back:hover{color:var(--ink)}
 
+/* ═══════ weekly review · rank · points ═══════ */
+.wr{width:100%;text-align:left;margin-top:26px;background:linear-gradient(135deg,var(--surface) 30%,var(--sunken));
+  border:1px solid var(--hair);border-radius:24px;padding:24px 28px}
+.wr .wine-link{font-size:15.5px;font-weight:700;color:var(--accent);margin-top:10px;display:inline-block}
+.wr .wine-link:hover{text-decoration:underline}
+.react-bar{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.react{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;
+  padding:6px 14px;font-size:13px;color:var(--ink2);background:var(--surface);transition:all .13s}
+.react:hover{border-color:var(--accent);transform:translateY(-1px)}
+.react[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:700}
+.react b{font-variant-numeric:tabular-nums;font-weight:700}
+.rank-row{display:flex;gap:8px;align-items:center;margin:12px 2px 0;flex-wrap:wrap;font-size:12px;color:var(--ink3)}
+.rank-row .rk{display:inline-flex;gap:7px;align-items:center;border:1px solid var(--hair);background:var(--surface);
+  border-radius:999px;padding:5px 13px;font-size:12.5px;color:var(--ink2);transition:border-color .13s}
+.rank-row .rk b{color:var(--accent);font-variant-numeric:tabular-nums}
+.rank-row .rk:hover{border-color:var(--accent)}
+.pick-chip{display:flex;align-items:center;gap:10px;background:var(--accent-soft);border:1px solid var(--accent);
+  border-radius:12px;padding:10px 14px;margin-bottom:10px;font-size:14px}
+.pick-chip .sub{font-size:12px;color:var(--ink2)}
+.pick-chip .x{margin-left:auto;color:var(--ink3);font-size:12.5px;flex:none}
+.pick-chip .x:hover{color:var(--accent)}
+.vis-row{display:flex;gap:8px}
+.vis-row button{flex:1;border:1px solid var(--line);border-radius:10px;padding:11px;font-size:13.5px;color:var(--ink2);transition:all .13s}
+.vis-row button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:700}
+.pt-note{font-size:12px;color:var(--ink3);margin:10px 2px 0;line-height:1.6}
+.pt-chip{font-size:11px;font-weight:700;color:var(--gold);background:var(--sunken);border-radius:999px;padding:2px 9px}
+
 .toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,90px);background:var(--ink);color:var(--bg);
   padding:12px 24px;border-radius:999px;font-size:14px;font-weight:600;transition:transform .3s cubic-bezier(.2,.8,.2,1);z-index:99;pointer-events:none}
 .toast.on{transform:translate(-50%,0)}
@@ -390,6 +417,7 @@ footer.app{margin-top:64px;padding-top:22px;border-top:1px solid var(--hair);fon
     <button onclick="tryQ('선물용 샴페인')">선물용 샴페인</button> ·
     <button onclick="tryQ('매운 한식이랑 마실 와인')">매운 한식이랑 마실 와인</button>
   </p>
+  <div class="rank-row" id="rank"></div>
 
   <div id="ai-out"></div>
   <div id="feature"></div>
@@ -634,24 +662,120 @@ function bottle(cls,label){
     <text x="30" y="103" text-anchor="middle" font-size="9.5" font-weight="700" fill="#3A2A2E" font-family="Georgia,serif">${label}</text>
   </svg>`;
 }
-/* ═══════════ 이 주의 와인 ═══════════ */
+/* ═══════════ 이 주의 후기 + 리액션 ═══════════ */
+const REACTS=[{k:"wow",e:"🍷",t:"근사해요"},{k:"help",e:"👍",t:"도움돼요"},{k:"cheers",e:"🥂",t:"같이 마셔요"}];
+let reactStore={};try{reactStore=JSON.parse(localStorage.getItem("cave2-react")||"{}")}catch(e){}
+let remoteReacts={},remoteWeekly=null;
+const reactLoaded=new Set();
+function allPublicReviews(){
+  const local=state.notes.filter(n=>n.public!==false).map((n,i)=>({...n,rid:"loc-"+(n.id||i)}));
+  const seed=SEED_RV.map((r,i)=>({...r,rid:"seed-"+i}));
+  return[...(remoteWeekly||[]),...local,...seed];
+}
+function getReacts(rid){
+  const base={wow:0,help:0,cheers:0,mine:null};
+  if(rid.startsWith("seed-")){const s=SEED_RV[+rid.slice(5)];if(s)base.help=s.likes||0}
+  const loc=reactStore[rid]||{};
+  ["wow","help","cheers"].forEach(k=>base[k]+=loc[k]||0);
+  if(loc.mine)base.mine=loc.mine;
+  const rem=remoteReacts[rid];
+  if(rem){["wow","help","cheers"].forEach(k=>base[k]+=rem[k]||0);if(rem.mine)base.mine=rem.mine}
+  return base;
+}
+async function doReact(rid,k){
+  if(!state.user){openAuth(()=>doReact(rid,k));return}
+  if(getReacts(rid).mine){toast("이미 리액션을 남겼습니다");return}
+  if(FB.on&&state.user.uid){
+    try{
+      await FB.db.collection("reactions").doc(rid+"_"+state.user.uid)
+        .set({rid,type:k,user:state.user.name,createdAt:Date.now()});
+      remoteReacts[rid]=remoteReacts[rid]||{wow:0,help:0,cheers:0,mine:null};
+      remoteReacts[rid][k]=(remoteReacts[rid][k]||0)+1;remoteReacts[rid].mine=k;
+    }catch(e){toast("리액션 저장에 실패했습니다");return}
+  }else{
+    reactStore[rid]=reactStore[rid]||{};
+    reactStore[rid][k]=(reactStore[rid][k]||0)+1;reactStore[rid].mine=k;
+    try{localStorage.setItem("cave2-react",JSON.stringify(reactStore))}catch(e){}
+  }
+  toast("리액션을 남겼습니다 🍷");renderFeature();
+}
+function ensureReacts(rid){
+  if(!FB.on||reactLoaded.has(rid))return;
+  reactLoaded.add(rid);
+  FB.db.collection("reactions").where("rid","==",rid).get().then(s=>{
+    const agg={wow:0,help:0,cheers:0,mine:null};
+    s.docs.forEach(d=>{const r=d.data();agg[r.type]=(agg[r.type]||0)+1;
+      if(state.user&&state.user.uid&&d.id===rid+"_"+state.user.uid)agg.mine=r.type});
+    remoteReacts[rid]=agg;renderFeature();
+  }).catch(()=>{});
+}
+async function loadWeeklyRemote(){
+  if(!FB.on)return;
+  try{
+    const s=await FB.db.collection("reviews").orderBy("createdAt","desc").limit(30).get();
+    remoteWeekly=s.docs.map(d=>({...d.data(),rid:"fb-"+d.id}));
+    renderFeature();
+  }catch(e){}
+}
 function renderFeature(){
-  const pool=WINES.filter(w=>bestScore(w)>=96);
-  const week=Math.floor(Date.now()/6048e5);
-  const w=pool[week%pool.length];
-  document.getElementById("feature").innerHTML=`
-  <button class="feature" onclick="go('detail','${w.id}')">
-    <div>
-      <p class="caps" style="color:var(--gold)">WINE OF THE WEEK</p>
-      <div class="f-name serif">${w.en}</div>
-      <div class="f-ko">${w.ko}</div>
-      <p class="f-desc">${w.desc}</p>
-      <div class="f-meta"><span class="sc serif">${bestScore(w)}<small>PT</small></span>
-        <span class="dot">·</span>${stTxt(w)}<span class="dot">·</span>
-        <span>₩${FMT(avgPrice(w))} 평균가</span></div>
+  const el=document.getElementById("feature");if(!el)return;
+  const pool=allPublicReviews().filter(r=>r.text&&r.text.length>10&&r.rating);
+  if(!pool.length){el.innerHTML="";return}
+  pool.sort((a,b)=>(b.likes||0)-(a.likes||0));
+  const top=pool.slice(0,8);
+  const r=top[Math.floor(Date.now()/6048e5)%top.length];
+  const w=byId(r.wineId);
+  const name=r.wineName||(w&&w.ko)||"";
+  const rc=getReacts(r.rid);
+  ensureReacts(r.rid);
+  el.innerHTML=`
+  <div class="wr">
+    <p class="caps" style="color:var(--gold)">REVIEW OF THE WEEK · 이 주의 후기</p>
+    <div class="rv-top" style="margin-top:12px">
+      <span class="avatar">${(r.user||"?")[0]}</span><span class="u">${esc(r.user)}</span>
+      <span class="st">${starTxt(r.rating)} ${(+r.rating).toFixed(1)}</span>
+      <span class="dt">${r.date||""}</span></div>
+    ${w?`<button class="wine-link" onclick="go('detail','${w.id}')">${esc(name)} →</button>`
+       :`<span class="wine-link" style="color:var(--ink)">${esc(name)}</span>`}
+    <p class="rv-txt" style="margin-top:6px">${esc(r.text)}</p>
+    ${r.tags&&r.tags.length?`<div class="rv-tags">${r.tags.map(t=>`<span>${esc(t)}</span>`).join("")}</div>`:""}
+    <div class="react-bar">${REACTS.map(x=>`
+      <button class="react" aria-pressed="${rc.mine===x.k}" onclick="doReact('${r.rid}','${x.k}')">${x.e} ${x.t} <b>${rc[x.k]||0}</b></button>`).join("")}
     </div>
-    <div class="f-bottle">${bottle(w.cls,w.vintage)}</div>
-  </button>`;
+  </div>`;
+}
+
+/* ═══════════ 인기 검색어 ═══════════ */
+let rankLocal={};try{rankLocal=JSON.parse(localStorage.getItem("cave2-rank")||"{}")}catch(e){}
+if(!Object.keys(rankLocal).length)rankLocal={"스테이크에 어울리는 레드":4,"선물용 샴페인":3,"가성비 데일리 와인":2};
+let rankRemote=null;
+function recordSearch(q){
+  const t=q.trim().replace(/\s+/g," ").slice(0,20);
+  if(t.length<2)return;
+  rankLocal[t]=(rankLocal[t]||0)+1;
+  try{localStorage.setItem("cave2-rank",JSON.stringify(rankLocal))}catch(e){}
+  if(FB.on&&state.user&&state.user.uid){
+    FB.db.collection("searches").doc(t.replace(/\//g,"·"))
+      .set({term:t,count:firebase.firestore.FieldValue.increment(1)},{merge:true}).catch(()=>{});
+  }
+  renderRank();
+}
+async function loadRank(){
+  if(FB.on){
+    try{
+      const s=await FB.db.collection("searches").orderBy("count","desc").limit(5).get();
+      if(s.size)rankRemote=s.docs.map(d=>({term:d.data().term,count:d.data().count}));
+    }catch(e){}
+  }
+  renderRank();
+}
+function renderRank(){
+  const el=document.getElementById("rank");if(!el)return;
+  const list=(rankRemote&&rankRemote.length)?rankRemote
+    :Object.entries(rankLocal).map(([term,count])=>({term,count})).sort((a,b)=>b.count-a.count).slice(0,5);
+  if(!list.length){el.innerHTML="";return}
+  el.innerHTML=`<span class="caps" style="letter-spacing:.14em">인기 검색어</span>`+
+    list.map((x,i)=>`<button class="rk" onclick="tryQ('${esc(x.term).replace(/'/g,"")}')"><b>${i+1}</b>${esc(x.term)}</button>`).join("");
 }
 
 /* ═══════════ 내비게이션 ═══════════ */
@@ -725,6 +849,7 @@ async function loadMemberKey(){
       }
       persist();renderUser();
     });
+    loadWeeklyRemote();loadRank();
   }catch(e){console.warn("Firebase 초기화 실패 — 게스트 모드로 동작합니다",e)}
 })();
 
@@ -1129,6 +1254,7 @@ async function runAI(){
   const q=document.getElementById("q").value.trim();
   const out=document.getElementById("ai-out");
   if(!q){out.innerHTML="";document.getElementById("q").focus();return}
+  recordSearch(q);
   out.innerHTML=`<div class="ai-card"><div class="who"><span class="caps">AI SOMMELIER</span></div>
     <div class="thinking" role="status" aria-label="분석 중"><i></i><i></i><i></i></div></div>`;
   if(getGeminiKey()){
@@ -1204,7 +1330,7 @@ function priceChart(w){
 
 /* ═══════════ 상세 ═══════════ */
 function reviewsOf(id){
-  const local=state.notes.filter(n=>n.wineId===id).map(n=>({...n,mine:true}));
+  const local=state.notes.filter(n=>n.wineId===id&&n.public!==false).map(n=>({...n,mine:true}));
   return[...local,...SEED_RV.filter(r=>r.wineId===id)];
 }
 function starTxt(r){return"★".repeat(Math.round(r))+"☆".repeat(5-Math.round(r))}
@@ -1347,19 +1473,68 @@ const LV={body:["매우 가벼움","가벼움","중간","무거움","매우 무�
   tannin:["거의 없음","부드러움","중간","단단함","매우 단단함"],
   acid:["낮음","약간 낮음","중간","높음","매우 높음"],
   sweet:["드라이","오프드라이","약간 달콤","달콤","매우 달콤"]};
-let draft=null;
+let draft=null,extPickPool=[];
+/* 와인 선택 검색: 내장 24종 즉시 매칭 + 회원은 Gemini로 전 세계 와인 검색 */
+function pickChip(){
+  const el=document.getElementById("wpick-sel");if(!el)return;
+  let s=null;
+  if(draft.extWine)s={ko:draft.extWine.ko||draft.extWine.en,sub:[draft.extWine.country,draft.extWine.region].filter(Boolean).join(" · ")+" · 전 세계 검색"};
+  else if(draft.wineId){const w=byId(draft.wineId);if(w)s={ko:w.ko,sub:w.country+" · "+w.region}}
+  el.innerHTML=s?`<div class="pick-chip"><b>${esc(s.ko)}</b><span class="sub">${esc(s.sub)}</span>
+    <button class="x" onclick="draft.wineId='';draft.extWine=null;pickChip()">✕ 변경</button></div>`:"";
+}
+function pickLocal(id){draft.wineId=id;draft.extWine=null;pickChip();
+  const o=document.getElementById("wpick-out");if(o)o.innerHTML=""}
+function pickExt(i){draft.extWine=extPickPool[i];draft.wineId="";pickChip();
+  const o=document.getElementById("wpick-out");if(o)o.innerHTML=""}
+async function composeSearch(){
+  const q=(document.getElementById("wpick-q").value||"").trim();
+  const out=document.getElementById("wpick-out");
+  if(q.length<2){out.innerHTML="";return}
+  const ql=q.toLowerCase();
+  const loc=WINES.filter(x=>(x.ko+x.en+x.grape).toLowerCase().includes(ql)).slice(0,4);
+  const locHtml=loc.map(x=>`<button class="ai-pick" onclick="pickLocal('${x.id}')">
+    <div><div class="nm">${x.ko}</div><div class="why">${x.country} · ${x.region}</div></div>
+    <div class="pr">₩${FMT(avgPrice(x))}<small>평균가</small></div></button>`).join("");
+  if(!getGeminiKey()){
+    out.innerHTML=locHtml||`<p class="rv-empty">일치하는 와인이 없습니다.${state.user?"":" 로그인하면 전 세계 와인에서 검색됩니다."}</p>`;
+    return;
+  }
+  out.innerHTML=locHtml+`<div class="thinking" style="padding:12px 0"><i></i><i></i><i></i></div>`;
+  try{
+    const prompt=`와인 이름 검색어에 해당하는 실존 와인을 최대 4개 찾아 반드시 JSON으로만 출력하라:
+{"wines":[{"ko":"한글 이름","en":"영문 이름","country":"국가","region":"산지","type":"레드|화이트|스파클링|스위트|로제"}]}
+검색어: ${q}`;
+    const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key="+encodeURIComponent(getGeminiKey()),{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({contents:[{parts:[{text:prompt}]}],
+        generationConfig:{responseMimeType:"application/json",temperature:.3}})});
+    const j=await r.json();
+    const d=JSON.parse(j.candidates[0].content.parts[0].text);
+    extPickPool=(d.wines||[]).slice(0,4);
+    const extHtml=extPickPool.map((p,i)=>`<button class="ai-pick" onclick="pickExt(${i})">
+      <div><div class="nm">${esc(p.ko||p.en)}</div>
+      <div class="why">${esc([p.country,p.region,p.type].filter(Boolean).join(" · "))} · 전 세계 검색</div></div></button>`).join("");
+    out.innerHTML=(locHtml+extHtml)||`<p class="rv-empty">검색 결과가 없습니다.</p>`;
+  }catch(e){out.innerHTML=locHtml||`<p class="rv-empty">전 세계 검색에 실패했습니다. 잠시 후 다시 시도해 주세요.</p>`}
+}
+function setVis(v){draft.public=v;
+  document.getElementById("vis-pub").setAttribute("aria-pressed",v);
+  document.getElementById("vis-prv").setAttribute("aria-pressed",!v)}
 function renderCompose(id){
   const w=byId(id);
-  draft={wineId:w?w.id:"",rating:3.5,tags:[],photos:[],
+  draft={wineId:w?w.id:"",extWine:null,public:true,rating:3.5,tags:[],photos:[],
     sliders:w?{...w.profile}:{body:3,tannin:3,acid:3,sweet:1}};
   const today=new Date().toISOString().slice(0,10);
   const S=[["body","바디"],["tannin","탄닌"],["acid","산도"],["sweet","당도"]];
   const picker=w?"":`
     <div class="f-label">와인 선택</div>
-    <select class="wine-pick" onchange="draft.wineId=this.value">
-      <option value="">어떤 와인을 마셨나요?</option>
-      ${WINES.map(x=>`<option value="${x.id}">${x.ko}</option>`).join("")}
-    </select>`;
+    <div id="wpick-sel"></div>
+    <div class="searchbar" style="border-radius:12px;padding:6px 6px 6px 16px">
+      <input id="wpick-q" placeholder="와인 이름으로 검색 — 전 세계 와인 지원" autocomplete="off">
+      <button class="ai-btn" style="padding:9px 16px" onclick="composeSearch()">검색</button>
+    </div>
+    <div class="ai-picks" id="wpick-out" style="border-top:none;margin-top:4px"></div>`;
   document.getElementById("view-compose").innerHTML=`
     <button class="backbar" onclick="go(${w?`'detail','${w.id}'`:"'cellar'"})">← 돌아가기</button>
     <p class="caps" style="margin:18px 0 4px;color:var(--gold)">TASTING NOTE</p>
@@ -1400,6 +1575,13 @@ function renderCompose(id){
         <input type="text" id="f-place" placeholder="장소 (예: 집, 한남동 K바)" aria-label="장소">
         <input type="text" id="f-people" placeholder="함께한 사람" aria-label="함께한 사람" style="grid-column:1/-1">
       </div>
+
+      <div class="f-label">공개 설정</div>
+      <div class="vis-row">
+        <button id="vis-pub" aria-pressed="true" onclick="setVis(true)">🌍 공개 — 커뮤니티에 공유</button>
+        <button id="vis-prv" aria-pressed="false" onclick="setVis(false)">🔒 비공개 — 나만 보기</button>
+      </div>
+      <p class="pt-note">후기 게시 시 기본 <b>10P</b> — 코멘트(20자 이상)·맛 태그·사진·장소·동석자를 채우면 각 <b>+2P</b>, 최대 20P</p>
     </div>
 
     <div class="save-row">
@@ -1407,6 +1589,8 @@ function renderCompose(id){
       <button class="btn-primary" onclick="saveNote()">후기 게시</button>
     </div>`;
   updStars();
+  const wq=document.getElementById("wpick-q");
+  if(wq)wq.addEventListener("keydown",e=>{if(e.key==="Enter")composeSearch()});
 }
 function updStars(){
   const r=draft.rating;
@@ -1426,22 +1610,40 @@ function addPhotos(inp){
     r.readAsDataURL(f);
   });
 }
+function slugify(s){return String(s||"").toLowerCase().replace(/[^a-z0-9가-힣]+/g,"-").replace(/^-|-$/g,"").slice(0,40)}
+function calcPoints(n){
+  let p=10;
+  if(n.text&&n.text.length>=20)p+=2;
+  if(n.tags.length)p+=2;
+  if(n.photos.length)p+=2;
+  if(n.place)p+=2;
+  if(n.people)p+=2;
+  return p;
+}
 function saveNote(){
-  if(!draft.wineId){toast("와인을 선택해 주세요");return}
-  const w=byId(draft.wineId);
-  const note={wineId:draft.wineId,wineName:w.ko,user:state.user?state.user.name:"익명",
+  let wineId=draft.wineId,wineName="",ext=null;
+  if(draft.extWine){ext=draft.extWine;wineId="ext-"+slugify(ext.en||ext.ko);wineName=ext.ko||ext.en}
+  else if(wineId){wineName=byId(wineId).ko}
+  else{toast("와인을 선택해 주세요");return}
+  const note={id:String(Date.now()),wineId,wineName,ext,
+    public:draft.public!==false,
+    user:state.user?state.user.name:"익명",
     rating:draft.rating,tags:[...draft.tags],sliders:{...draft.sliders},
     text:document.getElementById("f-text").value.trim(),
     date:document.getElementById("f-date").value,
     place:document.getElementById("f-place").value.trim(),
     people:document.getElementById("f-people").value.trim(),photos:[...draft.photos]};
+  note.points=calcPoints(note);
   state.notes.unshift(note);persist();
-  if(FB.on&&state.user&&state.user.uid){
+  /* 공개 후기만 서버(커뮤니티)에 공유 */
+  if(note.public&&FB.on&&state.user&&state.user.uid){
     FB.db.collection("reviews").add({wineId:note.wineId,wineName:note.wineName,user:note.user,uid:state.user.uid,
       rating:note.rating,tags:note.tags,text:note.text,date:note.date,place:note.place,people:note.people,
-      createdAt:Date.now()}).catch(e=>console.warn("후기 서버 동기화 실패",e));
+      points:note.points,createdAt:Date.now()}).catch(e=>console.warn("후기 서버 동기화 실패",e));
   }
-  toast("후기가 게시되었습니다");go("detail",draft.wineId);
+  renderFeature();
+  toast(`후기가 ${note.public?"게시":"저장(비공개)"}되었습니다 · +${note.points}P 적립 🍷`);
+  go(byId(wineId)?"detail":"cellar",wineId);
 }
 
 /* ═══════════ 마이 셀러 ═══════════ */
@@ -1458,6 +1660,8 @@ function renderCellar(){
   const mine=state.notes;
   const rAvg=mine.length?(mine.reduce((s,n)=>s+n.rating,0)/mine.length).toFixed(1):"–";
   const alertIds=Object.keys(state.alerts);
+  const pts=mine.reduce((s,n)=>s+(n.points||0),0);
+  const grade=pts>=100?"마스터":pts>=60?"소믈리에":pts>=30?"테이스터":"뉴비";
   const alerts=alertIds.length?alertIds.map(id=>{const w=byId(id);return w?`
     <button class="alert-mini" style="width:100%;text-align:left" onclick="go('detail','${w.id}')">
       <span style="color:var(--accent)">●</span> ${w.ko}
@@ -1466,6 +1670,8 @@ function renderCellar(){
   const notes=mine.length?mine.map((n,i)=>`
     <div class="rv" style="border-top:1px solid var(--hair)">
       <div class="rv-top"><span class="u" style="font-size:14.5px">${n.wineName}</span>
+        ${n.public===false?'<span class="mine" style="border-color:var(--ink3);color:var(--ink3)">🔒 비공개</span>':""}
+        ${n.points?`<span class="pt-chip">+${n.points}P</span>`:""}
         <span class="st">${starTxt(n.rating)} ${n.rating.toFixed(1)}</span><span class="dt">${n.date||""}</span></div>
       ${n.text?`<p class="rv-txt">${n.text}</p>`:""}
       ${n.tags.length?`<div class="rv-tags">${n.tags.map(t=>`<span>${t}</span>`).join("")}</div>`:""}
@@ -1482,6 +1688,7 @@ function renderCellar(){
     </div>
     <div class="mc-stats">
       <div class="mc-stat"><div class="n serif">${mine.length}</div><div class="k">나의 후기</div></div>
+      <div class="mc-stat"><div class="n serif">${pts}<span style="font-size:13px">P</span></div><div class="k">포인트 · ${grade}</div></div>
       <div class="mc-stat"><div class="n serif">${rAvg}</div><div class="k">평균 평점</div></div>
       <div class="mc-stat"><div class="n serif">${alertIds.length}</div><div class="k">가격 알림</div></div>
     </div>
@@ -1502,5 +1709,5 @@ function toast(msg){
   const t=document.getElementById("toast");t.textContent=msg;t.classList.add("on");
   clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("on"),2200);
 }
-renderUser();renderChips();renderGrid();renderFeature();
+renderUser();renderChips();renderGrid();renderFeature();renderRank();
 </script>

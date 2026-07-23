@@ -62,9 +62,22 @@ service cloud.firestore {
       allow read: if request.auth != null && request.auth.token.email_verified;
       allow write: if false;
     }
+    match /searches/{term} {
+      allow read: if true;
+      allow create, update: if request.auth != null;
+      allow delete: if false;
+    }
+    match /reactions/{id} {
+      allow read: if true;
+      allow create: if request.auth != null && request.auth.token.email_verified;
+      allow update, delete: if false;
+    }
   }
 }
 ```
+
+`searches`는 인기 검색어 순위(회원 검색 시 집계), `reactions`는 '이 주의 후기'
+리액션(회원당 후기 1회, 문서 ID `{후기ID}_{uid}`로 중복 방지)에 사용됩니다.
 
 ### 회원 전용 전 세계 와인 검색 (Gemini)
 
