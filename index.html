@@ -636,6 +636,8 @@ const SEED_RV=[
 {wineId:"loosen",user:"하영",rating:4.5,text:"엽떡이랑 마셨는데 매운맛이 리셋되는 마법. 도수도 낮아서 부담 없음.",date:"2026-07-08",likes:21,tags:["달콤함","산도 높음","라이트바디"]},
 {wineId:"talbot",user:"미드나잇드링커",rating:4,text:"생쥘리앙의 안정감. 소개팅 2차에서 아는 척하기 좋은 와인이기도 하다.",date:"2026-05-05",likes:11,tags:["탄닌 단단함","과실향"]}
 ];
+/* 정식 서비스 전환: 데모용 예시 후기 비활성화 — 실제 사용자 후기만 노출 */
+SEED_RV.length=0;
 
 /* ═══════════ 상태 ═══════════ */
 let state={filter:"전체",query:"",alerts:{},notes:[],user:null};
@@ -720,7 +722,16 @@ async function loadWeeklyRemote(){
 function renderFeature(){
   const el=document.getElementById("feature");if(!el)return;
   const pool=allPublicReviews().filter(r=>r.text&&r.text.length>10&&r.rating);
-  if(!pool.length){el.innerHTML="";return}
+  if(!pool.length){
+    el.innerHTML=`
+    <div class="wr" style="text-align:center">
+      <p class="caps" style="color:var(--gold)">REVIEW OF THE WEEK · 이 주의 후기</p>
+      <p style="margin:12px 0 4px;font-size:15.5px;font-weight:700">아직 이번 주의 후기가 없습니다</p>
+      <p style="font-size:13px;color:var(--ink2);margin:0 0 16px">첫 후기의 주인공이 되어보세요 — 게시하면 10P가 적립됩니다</p>
+      <button class="btn-primary" style="padding:12px 30px" onclick="wantCompose()">후기 남기기</button>
+    </div>`;
+    return;
+  }
   pool.sort((a,b)=>(b.likes||0)-(a.likes||0));
   const top=pool.slice(0,8);
   const r=top[Math.floor(Date.now()/6048e5)%top.length];
