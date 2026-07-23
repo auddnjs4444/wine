@@ -58,9 +58,29 @@ service cloud.firestore {
       allow create: if request.auth != null;
       allow update, delete: if false;
     }
+    match /config/{doc} {
+      allow read: if request.auth != null && request.auth.token.email_verified;
+      allow write: if false;
+    }
   }
 }
 ```
+
+### 회원 전용 전 세계 와인 검색 (Gemini)
+
+전 세계 검색은 **이메일 인증을 마친 회원에게만** 제공됩니다.
+Gemini API 키는 공개 저장소가 아닌 Firestore에 보관하고, 위 규칙의 `config`
+블록이 "인증된 회원만 읽기"로 접근을 제한합니다. 설정:
+
+1. Gemini 키 발급 — https://aistudio.google.com/apikey
+2. Firebase 콘솔 → Firestore → **데이터** 탭 → **+ 컬렉션 시작**
+   - 컬렉션 ID: `config`
+   - 문서 ID: `gemini`
+   - 필드: `key` (문자열) = 발급받은 키 값
+3. 위 보안 규칙(config 블록 포함)이 게시되어 있는지 확인
+
+동작: 로그인하면 앱이 `config/gemini`에서 키를 읽어 자동으로 전 세계 검색을
+켭니다. 게스트는 내장 24종 검색만 사용할 수 있습니다.
 
 이것으로 해결되는 것:
 

@@ -690,6 +690,16 @@ async function hashPw(pw){
 }
 
 const FB={on:false,auth:null,db:null};
+/* 회원 전용 Gemini 키 — 로그인(이메일 인증) 후 Firestore config/gemini 문서에서 로드.
+   게스트에게는 제공되지 않으며, 저장소에도 올라가지 않는다. */
+let memberKey="";
+async function loadMemberKey(){
+  if(!FB.on||!FB.auth.currentUser){memberKey="";return}
+  try{
+    const d=await FB.db.collection("config").doc("gemini").get();
+    memberKey=(d.exists&&d.data().key)||"";
+  }catch(e){memberKey=""}
+}
 (async function initFirebase(){
   const cfg=CFG.firebase;
   if(!cfg)return;
@@ -706,8 +716,13 @@ const FB={on:false,auth:null,db:null};
     await load("https://www.gstatic.com/firebasejs/"+V+"/firebase-firestore-compat.js");
     firebase.initializeApp(cfg);FB.auth=firebase.auth();FB.db=firebase.firestore();FB.on=true;
     FB.auth.onAuthStateChanged(u=>{
-      if(u&&u.emailVerified){state.user={name:u.displayName||u.email.split("@")[0],email:u.email,uid:u.uid}}
-      else if(state.user&&state.user.uid){state.user=null}
+      if(u&&u.emailVerified){
+        state.user={name:u.displayName||u.email.split("@")[0],email:u.email,uid:u.uid};
+        loadMemberKey();
+      }else{
+        if(state.user&&state.user.uid)state.user=null;
+        memberKey="";
+      }
       persist();renderUser();
     });
   }catch(e){console.warn("Firebase 초기화 실패 — 게스트 모드로 동작합니다",e)}
@@ -856,7 +871,7 @@ function fbErr(e){
 }
 function logout(){
   if(FB.on&&FB.auth.currentUser)FB.auth.signOut();
-  state.user=null;persist();renderUser();go("explore");toast("로그아웃되었습니다");
+  state.user=null;memberKey="";persist();renderUser();go("explore");toast("로그아웃되었습니다");
 }
 
 /* ═══════════ 탐색 ═══════════ */
@@ -983,8 +998,10 @@ function esc(s){return String(s||"").replace(/</g,"&lt;")}
 /* 키 우선순위: config.js → 내 브라우저(localStorage).
    공개 저장소에 키를 올리면 GitHub가 차단하므로, 사이트에서 직접 입력하는 방식을 지원 */
 function getGeminiKey(){
-  try{return CFG.geminiKey||localStorage.getItem("cave2-gemini")||""}
-  catch(e){return CFG.geminiKey||""}
+  if(CFG.geminiKey)return CFG.geminiKey;
+  if(!state.user)return"";               /* 게스트: 내장 24종 검색만 */
+  if(memberKey)return memberKey;         /* 회원: Firestore에서 받은 키 */
+  try{return localStorage.getItem("cave2-gemini")||""}catch(e){return""}
 }
 function setGeminiKey(){
   const k=prompt("Gemini API 키를 붙여넣으세요.\n(https://aistudio.google.com/apikey 에서 발급 · 이 브라우저에만 저장됩니다)");
@@ -1056,8 +1073,11 @@ async function runAI(){
         <div><div class="nm">${w.ko}</div><div class="why">${reasons[w.id]||""}</div></div>
         <div class="pr">₩${FMT(avgPrice(w))}<small>평균가</small></div></button>`).join("");
     renderAIcard(q,intro,html,
-      getGeminiKey()?"":`<p class="search-hint" style="margin:12px 0 0">지금은 앱에 담긴 24종에서 추천 중 —
-        <button class="link-btn" style="display:inline;margin:0" onclick="setGeminiKey()">Gemini API 키 연결</button>하면 전 세계 와인 검색으로 확장됩니다</p>`);
+      getGeminiKey()?"":(state.user
+        ?`<p class="search-hint" style="margin:12px 0 0">전 세계 검색 키가 아직 연결되지 않았습니다 —
+          <button class="link-btn" style="display:inline;margin:0" onclick="setGeminiKey()">직접 키 연결</button></p>`
+        :`<p class="search-hint" style="margin:12px 0 0">지금은 기본 24종에서 추천 중 —
+          <button class="link-btn" style="display:inline;margin:0" onclick="openAuth()">로그인·회원가입</button>하면 전 세계 와인 검색이 열립니다</p>`));
   },850);
 }
 
