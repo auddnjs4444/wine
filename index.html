@@ -1128,6 +1128,12 @@ function getGeminiKey(){
   if(memberKey)return memberKey;         /* 회원: Firestore에서 받은 키 */
   try{return localStorage.getItem("cave2-gemini")||""}catch(e){return""}
 }
+/* 키가 없으면 회원에 한해 서버에서 한 번 더 받아본다 */
+async function ensureKey(){
+  if(getGeminiKey())return true;
+  if(state.user&&FB.on&&FB.auth.currentUser)await loadMemberKey();
+  return !!getGeminiKey();
+}
 function setGeminiKey(){
   const k=prompt("Gemini API 키를 붙여넣으세요.\n(https://aistudio.google.com/apikey 에서 발급 · 이 브라우저에만 저장됩니다)");
   if(k===null)return;
@@ -1257,7 +1263,7 @@ async function runAI(){
   recordSearch(q);
   out.innerHTML=`<div class="ai-card"><div class="who"><span class="caps">AI SOMMELIER</span></div>
     <div class="thinking" role="status" aria-label="분석 중"><i></i><i></i><i></i></div></div>`;
-  if(getGeminiKey()){
+  if(await ensureKey()){
     try{
       const res=await geminiAsk(q);
       lastPicks=(res.picks||[]).slice(0,3);
@@ -1496,8 +1502,12 @@ async function composeSearch(){
   const locHtml=loc.map(x=>`<button class="ai-pick" onclick="pickLocal('${x.id}')">
     <div><div class="nm">${x.ko}</div><div class="why">${x.country} · ${x.region}</div></div>
     <div class="pr">₩${FMT(avgPrice(x))}<small>평균가</small></div></button>`).join("");
-  if(!getGeminiKey()){
-    out.innerHTML=locHtml||`<p class="rv-empty">일치하는 와인이 없습니다.${state.user?"":" 로그인하면 전 세계 와인에서 검색됩니다."}</p>`;
+  if(!(await ensureKey())){
+    out.innerHTML=(locHtml||"")+(state.user
+      ?`<p class="rv-empty">내장 ${loc.length}건 표시 중 — 전 세계 검색 키가 아직 연결되지 않았습니다.
+        <button class="link-btn" style="display:inline;margin:0" onclick="setGeminiKey()">직접 키 연결</button></p>`
+      :`<p class="rv-empty">내장 ${loc.length}건 표시 중 —
+        <button class="link-btn" style="display:inline;margin:0" onclick="openAuth()">로그인</button>하면 전 세계 와인에서 검색됩니다.</p>`);
     return;
   }
   out.innerHTML=locHtml+`<div class="thinking" style="padding:12px 0"><i></i><i></i><i></i></div>`;
