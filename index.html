@@ -2,16 +2,16 @@
 <html lang="ko">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0E0C0B">
+<meta name="theme-color" content="#ECE4DA">
 <title>AFTER WINE — 와인 인텔리전스</title>
 <style>
 /* ═══════ tokens ═══════ */
 :root{
-  color-scheme:dark;
-  --bg:#0E0C0B; --surface:#161311; --sunken:#1C1815; --hover:#1A1614;
-  --ink:#F2ECE3; --ink2:#BCB1A6; --ink3:#82786F; --line:#2E2823; --hair:#221E1A;
-  --accent:#C86A7B; --accent-ink:#160B0E; --accent-soft:#2A191D;
-  --gold:#D8B77A; --ok:#8FBF9F; --warn:#D6B455;
+  color-scheme:light;
+  --bg:#ECE4DA; --surface:#F2EBE1; --sunken:#E2D8C9; --hover:#E7DED0;
+  --ink:#131110; --ink2:#4C4640; --ink3:#8A8175; --line:#C6B9A6; --hair:#DCD2C1;
+  --accent:#6D1F2C; --accent-ink:#F4EDE3; --accent-soft:#E0D0C6;
+  --gold:#7C6337; --ok:#44614C; --warn:#7C6337;
   --glass-red1:#802639; --glass-red2:#33101B;
   --glass-wht1:#D5BE7F; --glass-wht2:#8F7A3F;
   --glass-spk1:#A3925F; --glass-spk2:#544829;
@@ -26,7 +26,7 @@ html,body{margin:0;padding:0}
 body{background:var(--bg);color:var(--ink);
   font-family:'Apple SD Gothic Neo','Pretendard','Malgun Gothic','Noto Sans KR',sans-serif;
   font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased}
-.serif{font-family:'Didot','Bodoni MT','Playfair Display',Georgia,'Times New Roman',serif}
+.serif{font-family:'Didot','Bodoni MT','Playfair Display','Noto Serif KR','Batang',Georgia,'Times New Roman',serif}
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;padding:0}
 input,textarea,select{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
@@ -40,7 +40,8 @@ header.app{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--b
 .app-inner{max-width:880px;margin:0 auto;display:flex;align-items:center;height:62px}
 .brand{display:flex;align-items:baseline;gap:10px;margin-right:34px;cursor:pointer}
 .brand:hover .mark{color:var(--accent)}
-.brand .mark{font-size:21px;letter-spacing:.06em;font-style:italic;transition:color .15s;white-space:nowrap}
+.brand .mark{font-size:20px;letter-spacing:.08em;font-style:normal;transition:color .15s;white-space:nowrap}
+.brand .mark em{font-style:italic;letter-spacing:.02em;font-weight:400}
 .brand .sub{font-size:10.5px;color:var(--ink3);letter-spacing:.14em}
 nav.tabs{display:flex;gap:26px;align-self:stretch}
 nav.tabs button{font-size:14px;color:var(--ink3);border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s}
@@ -61,14 +62,16 @@ nav.tabs button i{font-style:normal;font-size:9.5px;color:var(--gold);letter-spa
 .hero h1{margin:8px 0 0;font-size:clamp(26px,4.5vw,34px);font-weight:400;line-height:1.28;letter-spacing:-.01em;text-wrap:balance}
 .hero h1 b{font-weight:400;font-style:italic;color:var(--accent)}
 .hero p{margin:10px 0 0;color:var(--ink2);font-size:14.5px;max-width:56ch}
-/* 스태거드 에디토리얼 헤드라인 (Normal is boring 구성) */
-.hero-ed{margin:70px 0 44px;position:relative}
-.he-label{font-size:10px;letter-spacing:.32em;color:var(--gold);font-weight:700;margin:0 0 22px}
-.hero-ed h1{margin:0;font-size:clamp(38px,7.5vw,74px);line-height:1.05;font-weight:800;letter-spacing:-.02em;text-wrap:balance}
-.he-l2{margin-left:14%;transition:opacity .5s ease}
-.he-l3{margin:18px 0 0 32%;font-size:clamp(17px,2.5vw,23px);font-style:italic;color:var(--ink2);letter-spacing:.02em}
-.he-l3 em{color:var(--gold);font-style:italic}
-@media(max-width:640px){.he-l2{margin-left:9%}.he-l3{margin-left:14%}}
+/* 스태거드 세리프 헤드라인 (Normal is Boring 실측 기반: 거대 세리프 + 괄호 라벨) */
+.hero-ed{margin:76px 0 52px;position:relative}
+.he-label{font-family:'Didot','Bodoni MT','Noto Serif KR','Batang',Georgia,serif;font-style:italic;
+  font-size:15px;letter-spacing:.06em;color:var(--ink2);font-weight:400;margin:0 0 26px}
+.hero-ed h1{margin:0;font-family:'Didot','Bodoni MT','Noto Serif KR','Batang',Georgia,serif;
+  font-size:clamp(42px,8.5vw,86px);line-height:1.08;font-weight:600;letter-spacing:.005em;text-wrap:balance}
+.he-l2{margin-left:13%;transition:opacity .5s ease}
+.he-l3{margin:22px 0 0 30%;font-size:clamp(17px,2.5vw,23px);font-style:italic;color:var(--ink2);letter-spacing:.02em}
+.he-l3 em{color:var(--accent);font-style:italic}
+@media(max-width:640px){.he-l2{margin-left:8%}.he-l3{margin-left:13%}}
 
 /* 풀스크린 웰컴 — 시네마틱 풀블리드 (셀러 포토그래피) */
 .welcome{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
@@ -79,13 +82,15 @@ nav.tabs button i{font-style:normal;font-size:9.5px;color:var(--gold);letter-spa
 .w-nav{position:absolute;top:0;left:0;right:0;z-index:3;display:flex;justify-content:space-between;
   padding:24px 30px;font-size:11px;letter-spacing:.2em;color:#CDBFB2;font-weight:600}
 .w-inner{position:relative;z-index:2}
-.w-cap{font-size:11px;letter-spacing:.3em;font-weight:700;margin:0;color:#D8B77A}
-.w-logo{font-size:clamp(52px,10vw,104px);font-style:italic;letter-spacing:.02em;line-height:1.05;
-  margin:16px 0 10px;color:#F3EAE0;text-shadow:0 4px 40px rgba(0,0,0,.5)}
-.w-tag{font-size:clamp(15px,2vw,18px);letter-spacing:.08em;margin:0 0 44px;color:#E5D8CB}
-.w-start{background:none;border:none;border-bottom:1px solid #D8B77A;border-radius:0;
-  padding:0 2px 9px;color:#F3EAE0;font-size:13.5px;letter-spacing:.24em;font-weight:700;transition:letter-spacing .3s}
-.w-start:hover{letter-spacing:.36em}
+.w-cap{font-family:'Didot','Bodoni MT','Noto Serif KR',Georgia,serif;font-style:italic;
+  font-size:15px;letter-spacing:.05em;font-weight:400;margin:0;color:#E5D8CB}
+.w-logo{font-size:clamp(50px,10vw,104px);font-style:normal;letter-spacing:.06em;line-height:1.05;
+  margin:18px 0 12px;color:#F3EAE0;text-shadow:0 4px 40px rgba(0,0,0,.5)}
+.w-logo em{font-style:italic;letter-spacing:.01em;font-weight:400}
+.w-tag{font-size:clamp(15px,2vw,18px);letter-spacing:.08em;margin:0 0 48px;color:#E5D8CB}
+.w-start{background:none;border:none;border-radius:0;
+  padding:0 2px 4px;color:#F3EAE0;font-size:15px;letter-spacing:.1em;font-weight:600;transition:letter-spacing .3s,color .3s}
+.w-start:hover{letter-spacing:.2em;color:#fff}
 
 .searchbar{display:flex;align-items:center;gap:12px;background:var(--surface);
   border:1px solid var(--line);border-radius:10px;padding:9px 10px 9px 22px;transition:border-color .15s}
@@ -134,7 +139,8 @@ nav.tabs button i{font-style:normal;font-size:9.5px;color:var(--gold);letter-spa
 .row:hover{padding-left:18px;background:linear-gradient(90deg,var(--accent-soft),transparent 65%)}
 .r-no{font-size:10.5px;color:var(--gold);letter-spacing:.1em;flex:none;width:22px;font-weight:700}
 .r-main{min-width:0;flex:1}
-.r-name{font-size:16.5px;font-weight:700;line-height:1.35}
+.r-name{font-family:'Didot','Bodoni MT','Noto Serif KR','Batang',Georgia,serif;
+  font-size:18px;font-weight:600;line-height:1.35}
 .r-name .st-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-left:8px;vertical-align:2px}
 .sd-now{background:var(--ok)}.sd-hold{background:var(--warn)}.sd-peak{background:var(--accent)}
 .r-en{font-size:12.5px;color:var(--ink3);font-style:italic;margin-top:1px}
@@ -190,7 +196,10 @@ nav.tabs button i{font-style:normal;font-size:9.5px;color:var(--gold);letter-spa
 
 .sect{margin-top:40px}
 .sect>.sh{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
-.sect>.sh h3{margin:0;font-size:11px;letter-spacing:.22em;color:var(--ink3);font-weight:700}
+.sect>.sh h3{margin:0;font-family:'Didot','Bodoni MT','Noto Serif KR','Batang',Georgia,serif;
+  font-style:italic;font-size:14.5px;letter-spacing:.05em;color:var(--ink2);font-weight:400;text-transform:capitalize}
+.sect>.sh h3::before{content:"( "}
+.sect>.sh h3::after{content:" )"}
 .sect>.sh .rule{flex:1;height:1px;background:var(--hair)}
 .sect>.sub{font-size:13px;color:var(--ink2);margin:0 0 14px}
 .panel{background:var(--surface);border:1px solid var(--hair);border-radius:var(--r);padding:20px 22px}
@@ -410,6 +419,9 @@ a.ai-pick{text-decoration:none;color:inherit}
 footer.app{margin-top:64px;padding-top:22px;border-top:1px solid var(--hair);font-size:12px;color:var(--ink3);line-height:1.8}
 </style>
 
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&display=swap" rel="stylesheet">
+
 <!-- shared bottle gradients -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
   <linearGradient id="g-red" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--glass-red1)"/><stop offset="1" stop-color="var(--glass-red2)"/></linearGradient>
@@ -420,11 +432,11 @@ footer.app{margin-top:64px;padding-top:22px;border-top:1px solid var(--hair);fon
 
 <header class="app"><div class="app-inner">
   <button class="brand" onclick="go('explore');showWelcome()" aria-label="시작 화면으로">
-    <span class="mark serif">After Wine</span><span class="sub">WINE INTELLIGENCE</span>
+    <span class="mark serif">AFTER <em>Wine</em></span><span class="sub">WINE INTELLIGENCE</span>
   </button>
   <nav class="tabs" aria-label="주 메뉴">
-    <button id="tab-explore" aria-current="true" onclick="go('explore')"><i>01</i> 탐색</button>
-    <button id="tab-cellar" aria-current="false" onclick="go('cellar')"><i>02</i> 마이 셀러</button>
+    <button id="tab-explore" aria-current="true" onclick="go('explore')"><i>(01)</i> 탐색</button>
+    <button id="tab-cellar" aria-current="false" onclick="go('cellar')"><i>(02)</i> 마이 셀러</button>
   </nav>
   <div class="user-slot" id="user-slot"></div>
 </div></header>
@@ -432,7 +444,7 @@ footer.app{margin-top:64px;padding-top:22px;border-top:1px solid var(--hair);fon
 <div class="shell">
 <main id="view-explore">
   <div class="hero-ed">
-    <p class="he-label">DISCOVER — 01</p>
+    <p class="he-label">( Discover — 01 )</p>
     <h1 class="he-l1">어떤 와인을</h1>
     <h1 class="he-l2" id="hero-q">찾으세요?</h1>
     <p class="he-l3 serif">와인, 그 후의 <em>기록</em></p>
@@ -489,10 +501,10 @@ footer.app{margin-top:64px;padding-top:22px;border-top:1px solid var(--hair);fon
 <div id="welcome" class="welcome hidden">
   <div class="w-nav" aria-hidden="true"><span>AFTER WINE</span><span>WINE INTELLIGENCE</span></div>
   <div class="w-inner">
-    <p class="w-cap">WINE INTELLIGENCE</p>
-    <div class="w-logo serif">After Wine</div>
+    <p class="w-cap">( Wine Intelligence )</p>
+    <div class="w-logo serif">AFTER <em>Wine</em></div>
     <p class="w-tag">어떤 와인을 찾으세요?</p>
-    <button class="w-start" onclick="startApp()">시작하기</button>
+    <button class="w-start" onclick="startApp()">( 시작하기 )</button>
   </div>
 </div>
 
