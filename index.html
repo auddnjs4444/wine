@@ -425,7 +425,7 @@ footer.app{margin-top:64px;padding-top:22px;border-top:1px solid var(--hair);fon
 </defs></svg>
 
 <header class="app"><div class="app-inner">
-  <button class="brand" onclick="go('explore')" aria-label="홈으로">
+  <button class="brand" onclick="go('explore');showWelcome()" aria-label="시작 화면으로">
     <span class="mark serif">After Wine</span><span class="sub">WINE INTELLIGENCE</span>
   </button>
   <nav class="tabs" aria-label="주 메뉴">
@@ -459,6 +459,9 @@ footer.app{margin-top:64px;padding-top:22px;border-top:1px solid var(--hair);fon
   <div id="ai-out"></div>
   <div id="feature"></div>
 
+  <button class="mc-cta" id="browse-btn" style="max-width:320px;margin:30px auto 0" onclick="openBrowse(true)">와인 셀렉션 둘러보기</button>
+
+  <div id="browse" class="hidden">
   <div class="toolbar">
     <div class="chips" id="chips" role="group" aria-label="필터"></div>
     <select class="sort" id="sort" onchange="renderGrid()" aria-label="정렬">
@@ -469,6 +472,7 @@ footer.app{margin-top:64px;padding-top:22px;border-top:1px solid var(--hair);fon
     </select>
   </div>
   <div class="grid" id="grid"></div>
+  </div>
 </main>
 
 <main id="view-detail" class="hidden"></main>
@@ -1123,7 +1127,17 @@ function renderGrid(){
     </button>`).join(""):
     `<p class="j-empty">조건에 맞는 와인이 없습니다.<br>필터를 바꾸거나 AI 소믈리에에게 질문해 보세요.</p>`;
 }
-document.getElementById("q").addEventListener("input",e=>{state.query=e.target.value;renderGrid()});
+/* 와인 목록은 기본 숨김 — 검색하거나 둘러보기를 눌렀을 때만 표시 */
+function openBrowse(scroll){
+  document.getElementById("browse").classList.remove("hidden");
+  document.getElementById("browse-btn").classList.add("hidden");
+  if(scroll)document.getElementById("browse").scrollIntoView({behavior:"smooth",block:"start"});
+}
+document.getElementById("q").addEventListener("input",e=>{
+  state.query=e.target.value;
+  if(state.query.trim())openBrowse();
+  renderGrid();
+});
 document.getElementById("q").addEventListener("keydown",e=>{if(e.key==="Enter")runAI()});
 function tryQ(t){document.getElementById("q").value=t;state.query="";runAI()}
 
@@ -1812,20 +1826,21 @@ setInterval(()=>{
   setTimeout(()=>{heroIdx=(heroIdx+1)%HERO_QS.length;el.textContent=HERO_QS[heroIdx];el.style.opacity=1},500);
 },4500);
 
-/* 웰컴 — 세션당 1회, 배경 A/C 랜덤 */
+/* 웰컴 — 세션당 1회 자동 노출 + 로고 클릭 시 재등장, 배경 A/C 랜덤 */
+function showWelcome(){
+  const w=document.getElementById("welcome");
+  w.classList.remove("w-a","w-c");
+  w.classList.add(Math.random()<0.5?"w-a":"w-c");
+  w.style.opacity=1;
+  w.classList.remove("hidden");
+}
 function startApp(){
   const w=document.getElementById("welcome");
   w.style.opacity=0;
   setTimeout(()=>w.classList.add("hidden"),450);
   try{sessionStorage.setItem("aw-welcomed","1")}catch(e){}
 }
-try{
-  if(!sessionStorage.getItem("aw-welcomed")){
-    const w=document.getElementById("welcome");
-    w.classList.add(Math.random()<0.5?"w-a":"w-c");
-    w.classList.remove("hidden");
-  }
-}catch(e){}
+try{if(!sessionStorage.getItem("aw-welcomed"))showWelcome()}catch(e){}
 
 renderUser();renderChips();renderGrid();renderFeature();renderRank();
 </script>
