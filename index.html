@@ -693,6 +693,11 @@ const FB={on:false,auth:null,db:null};
 (async function initFirebase(){
   const cfg=CFG.firebase;
   if(!cfg)return;
+  /* apiKey가 비었거나 콘솔에서 복사할 때 마스킹(•••)된 채 들어오면 게스트 모드 유지 */
+  if(!cfg.apiKey||!/^[\x21-\x7E]+$/.test(cfg.apiKey)||cfg.apiKey.includes("여기에")){
+    console.warn("Firebase apiKey가 올바르지 않습니다(빈 값 또는 마스킹된 문자 포함) — 게스트 모드로 동작합니다");
+    return;
+  }
   const load=src=>new Promise((res,rej)=>{const s=document.createElement("script");s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s)});
   try{
     const V="10.14.1";
